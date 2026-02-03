@@ -10,6 +10,8 @@ struct pomodoro: AsyncParsableCommand {
     @Option(name: .short, help: "Duration of the resting timer, in minutes.")
     var restDuration: TimeInterval = 5.0
 
+    private var state: State = .notStarted
+
     private enum State: Codable, Comparable {
         case notStarted
 
