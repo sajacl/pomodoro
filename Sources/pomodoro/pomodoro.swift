@@ -100,6 +100,9 @@ struct pomodoro: AsyncParsableCommand {
             restDuration: restDuration
         )
 
+        // first start point
+        state = .focus(focusDuration)
+
         // run loop
         while true {
             if !foo() {
@@ -111,11 +114,6 @@ struct pomodoro: AsyncParsableCommand {
     }
 
     private mutating func foo() -> CanContinue {
-        // check if time passed?
-        // if yes user wants to rest?
-        // if yes start time
-        // if no close
-
         elapsedTime += 1
 
         printLoading(for: elapsedTime)
