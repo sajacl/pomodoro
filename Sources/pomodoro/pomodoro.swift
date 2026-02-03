@@ -12,7 +12,11 @@ struct pomodoro: AsyncParsableCommand {
 
     private var duration: TimeInterval = 0.0
 
-    private var state: State = .notStarted
+    private var state: State = .notStarted {
+        didSet {
+            print(state)
+        }
+    }
 
     private enum State: Codable, Comparable {
         case notStarted
@@ -45,7 +49,14 @@ struct pomodoro: AsyncParsableCommand {
     }
 
     mutating func run() async throws {
+        // run loop
+        while true {
+            duration += 1
 
+            printLoading()
+
+            try await Task.sleep(for: .seconds(1))
+        }
     }
 
     private func printLoading() {
