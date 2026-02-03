@@ -142,7 +142,7 @@ struct pomodoro: AsyncParsableCommand {
                 elapsedTime = 0
 
             case .notStarted, .readyToStart, .waitingForConfirmation:
-                fatalError()
+                fatalError("Checking state change needs in an invalid state.")
         }
 
         return true
@@ -158,7 +158,7 @@ struct pomodoro: AsyncParsableCommand {
                     return restDuration
 
                 case .notStarted, .readyToStart, .waitingForConfirmation:
-                    fatalError()
+                    fatalError("Checking horizon duration in an invalid state.")
             }
         }()
 
@@ -180,7 +180,7 @@ struct pomodoro: AsyncParsableCommand {
                 confirmationMessage = "Back to work!\nPress 'Y' to continue."
 
             default:
-                fatalError()
+                fatalError("Asking user to continue in an invalid state.")
         }
 
         print(confirmationMessage)
@@ -188,7 +188,7 @@ struct pomodoro: AsyncParsableCommand {
         // ask for continuation
         let character = readLine()
 
-        let wantsToContinue = {
+        let shouldContinue = {
             guard let character else {
                 return false
             }
@@ -197,7 +197,7 @@ struct pomodoro: AsyncParsableCommand {
             continuationCharacters.contains(character.uppercased())
         }()
 
-        return wantsToContinue
+        return shouldContinue
     }
 
     private func printLoading(for elapsedTime: TimeInterval) {
