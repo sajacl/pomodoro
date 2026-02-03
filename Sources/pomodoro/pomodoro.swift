@@ -130,25 +130,19 @@ struct pomodoro: AsyncParsableCommand {
         }
 
         // check for state change needs
-        if checkIfTimeHasPassed() {
-            let previousState = state
+        let previousState = state
 
-            if askUserIfWantsToContinue() {
-                switch previousState {
-                    case .focus:
-                        state = .rest(restDuration)
-                        elapsedTime = 0
+        switch previousState {
+            case .focus:
+                state = .rest(restDuration)
+                elapsedTime = 0
 
-                    case .rest:
-                        state = .focus(focusDuration)
-                        elapsedTime = 0
+            case .rest:
+                state = .focus(focusDuration)
+                elapsedTime = 0
 
-                    case .notStarted, .readyToStart, .waitingForConfirmation:
-                        fatalError()
-                }
-            } else {
-                return false
-            }
+            case .notStarted, .readyToStart, .waitingForConfirmation:
+                fatalError()
         }
 
         return true
