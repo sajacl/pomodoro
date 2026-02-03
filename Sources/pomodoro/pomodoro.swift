@@ -56,10 +56,15 @@ struct pomodoro: AsyncParsableCommand {
         static func < (lhs: State, rhs: State) -> Bool {
             return lhs.index < rhs.index
         }
+
+        mutating func start(with duration: TimeInterval) {
+            self = .focus(duration)
+        }
     }
 
     mutating func run() async throws {
-        state = .focus(focusDuration)
+        // initial state
+        state.start(with: focusDuration)
 
         // run loop
         while true {
