@@ -1,6 +1,9 @@
 import Foundation
 import ArgumentParser
 
+/// Gap interval in minutes.
+private let interval: TimeInterval = 1.0 * 60
+
 @main
 @available(macOS 12, iOS 15, visionOS 1, tvOS 15, watchOS 8, *)
 struct pomodoro: AsyncParsableCommand {
