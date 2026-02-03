@@ -2,10 +2,14 @@ import Foundation
 import ArgumentParser
 
 /// Gap interval in minutes.
-private let interval: TimeInterval = 1.0 * 60
+private let interval: Duration = 1.0 * 60
 
 /// Allowed character that will move state forward.
 private let continuationCharacters: Set<Character> = ["Y"]
+
+private typealias CanContinue = Bool
+
+private typealias Duration = TimeInterval
 
 @main
 @available(macOS 12, iOS 15, visionOS 1, tvOS 15, watchOS 8, *)
@@ -37,13 +41,13 @@ struct pomodoro: AsyncParsableCommand {
         case notStarted
 
         /// Application is ready to start with given durations.
-        case readyToStart(focusDuration: TimeInterval, restDuration: TimeInterval)
+        case readyToStart(focusDuration: Duration, restDuration: Duration)
 
         /// Application is under `focus` state.
-        case focus(TimeInterval)
+        case focus(Duration)
 
         /// Application is under `rest` state.
-        case rest(TimeInterval)
+        case rest(Duration)
 
         /// Application is waiting for user's input.
         case waitingForConfirmation
@@ -71,11 +75,11 @@ struct pomodoro: AsyncParsableCommand {
             return lhs.index < rhs.index
         }
 
-        fileprivate mutating func startFocus(with duration: TimeInterval) {
+        fileprivate mutating func startFocus(with duration: Duration) {
             self = .focus(duration)
         }
 
-        fileprivate mutating func startRest(with duration: TimeInterval) {
+        fileprivate mutating func startRest(with duration: Duration) {
             self = .rest(duration)
         }
     }
@@ -97,9 +101,21 @@ struct pomodoro: AsyncParsableCommand {
         }
     }
 
-    private mutating func foo() -> Bool {
+    private mutating func foo() -> CanContinue {
+        if !checkIfTimeHasPassed() {
+            return false
+        }
+
+        elapsedTime += 1
+
+        printLoading(for: elapsedTime)
+
+        return true
+    }
+
+    private mutating func checkIfTimeHasPassed() -> CanContinue {
         // check for state change
-        let finalDuration: TimeInterval = {
+        let horizonDuration: TimeInterval = {
             switch state {
                 case .focus:
                     return focusDuration
@@ -112,7 +128,7 @@ struct pomodoro: AsyncParsableCommand {
             }
         }()
 
-        if elapsedTime >= finalDuration {
+        if elapsedTime >= horizonDuration {
             let previousState = state
 
             state = .waitingForConfirmation
@@ -161,10 +177,6 @@ struct pomodoro: AsyncParsableCommand {
                     fatalError()
             }
         }
-
-        elapsedTime += 1
-
-        printLoading(for: elapsedTime)
 
         return true
     }
