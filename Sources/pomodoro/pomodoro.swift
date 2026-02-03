@@ -72,7 +72,7 @@ struct pomodoro: AsyncParsableCommand {
 
             printLoading()
 
-            try await Task.sleep(for: .seconds(1))
+            try await Task.sleep(for: .seconds(interval))
         }
     }
 
