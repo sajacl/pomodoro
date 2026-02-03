@@ -43,7 +43,21 @@ struct pomodoro: AsyncParsableCommand {
             return lhs.index < rhs.index
         }
     }
+
     mutating func run() async throws {
-        print(focusDuration)
+
+    }
+
+    private func printLoading() {
+        var loadingBars = ""
+
+        for _ in 0..<Int(self.duration) {
+            loadingBars.append("|")
+        }
+
+        let loadingPercentage = Int(duration / focusDuration * 100)
+
+        print("\(loadingBars) %\(loadingPercentage)", terminator: "\r")
+        fflush(stdout)
     }
 }
