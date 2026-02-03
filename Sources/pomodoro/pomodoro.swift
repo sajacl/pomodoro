@@ -35,7 +35,7 @@ struct pomodoro: AsyncParsableCommand {
         help: "Duration of the resting timer, in minutes."
     )
     var restDuration: TimeInterval = 5.0
-    
+
     /// Elapsed time which will be check against durations.
     private var elapsedTime: TimeInterval = 0.0
 
@@ -99,6 +99,7 @@ struct pomodoro: AsyncParsableCommand {
         }
     }
 
+    // MARK: Main
     mutating func run() async throws {
         // initial state
         state = .readyToStart(
@@ -108,7 +109,7 @@ struct pomodoro: AsyncParsableCommand {
 
         // run loop
         while true {
-            if !foo() {
+            if !advance() {
                 break
             }
 
@@ -116,7 +117,7 @@ struct pomodoro: AsyncParsableCommand {
         }
     }
 
-    private mutating func foo() -> CanContinue {
+    private mutating func advance() -> CanContinue {
         // first start point
         if case let .readyToStart(focusDuration, _) = state {
             state = .focus(focusDuration)
@@ -141,11 +142,9 @@ struct pomodoro: AsyncParsableCommand {
         switch previousState {
             case .focus:
                 state = .rest(restDuration)
-                elapsedTime = 0
 
             case .rest:
                 state = .focus(focusDuration)
-                elapsedTime = 0
 
             case .notStarted, .readyToStart, .waitingForConfirmation:
                 fatalError("Checking state change needs in an invalid state.")
