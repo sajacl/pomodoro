@@ -7,6 +7,9 @@ private let interval: Duration = 1.0
 /// Allowed character that will move state forward.
 private let continuationCharacters: Set<Character> = ["Y"]
 
+/// Visual progress bar length.
+private let loadingBarWidth: Int = 30
+
 private typealias CanContinue = Bool
 
 private typealias Duration = TimeInterval
@@ -43,6 +46,9 @@ struct pomodoro: AsyncParsableCommand {
             #endif
         }
     }
+    
+    /// Tracks previous loading output's length for clean overwriting.
+    private var lastLoadingOutputLength: Int = 0
 
     /// Application state machine.
     private enum State: Codable, Comparable {
@@ -203,17 +209,38 @@ struct pomodoro: AsyncParsableCommand {
         return shouldContinue
     }
 
-    private func printLoading(for elapsedTime: TimeInterval) {
-        var loadingBars = ""
+    // MARK: Loading bar
+    private mutating func printLoading(for elapsedTime: TimeInterval) {
+        // Spinner animation frames
+        let spinnerFrames = ["|", "/", "-", "\\"]
+        let spinner = spinnerFrames[Int(elapsedTime) % spinnerFrames.count]
 
-        for _ in 0..<Int(elapsedTime) {
-            loadingBars.append("|")
+        let barWidth = loadingBarWidth
+
+        let progress = min(elapsedTime / (duration * 60), 1.0)
+
+        let filledBars = Int(progress * Double(barWidth))
+
+        let emptyBars = barWidth - filledBars
+
+        let filledBarsStr = String(repeating: "█", count: filledBars)
+        let emptyBards = String(repeating: "░", count: emptyBars)
+        let bar = filledBarsStr + emptyBards
+
+        let loadingPercentage = Int(progress * 100)
+        var output = "\(spinner) [\(bar)] \(loadingPercentage)%"
+
+        // Pad with spaces if output is shorter than last one
+        let paddingLength = lastLoadingOutputLength - output.count
+
+        if paddingLength > 0 {
+            output += String(repeating: " ", count: paddingLength)
         }
 
-        let loadingPercentage = Int(elapsedTime / (focusDuration * 60) * 100)
-
-        print("\(loadingBars) %\(loadingPercentage)", terminator: "\r")
+        print("\r\(output)", terminator: "")
         fflush(stdout)
+
+        lastLoadingOutputLength = output.count
     }
 }
 
