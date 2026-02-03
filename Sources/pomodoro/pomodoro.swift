@@ -76,84 +76,92 @@ struct pomodoro: AsyncParsableCommand {
 
         // run loop
         while true {
-            let finalDuration: TimeInterval = {
-                switch state {
-                    case .notStarted:
-                        return 0
-
-                    case .focus:
-                        return focusDuration
-
-                    case .rest:
-                        return restDuration
-
-                    case .waitingForConfirmation:
-                        return 0
-                }
-            }()
-
-            if elapsedTime >= finalDuration {
-                let previousState = state
-
-                state = .waitingForConfirmation
-
-                let confirmationMessage: String
-
-                switch previousState {
-                    case .focus:
-                        confirmationMessage = "Lets take a break!\nPress 'Y' to continue."
-
-                    case .rest:
-                        confirmationMessage = "Back to work!\nPress 'Y' to continue."
-
-                    default:
-                        fatalError()
-                }
-
-                print(confirmationMessage)
-
-                // ask for continuation
-                let character = readLine()
-
-                let canContinue = {
-                    guard let character else {
-                        return false
-                    }
-
-                    return continuationCharacters.contains(character) ||
-                    continuationCharacters.contains(character.lowercased())
-                }()
-
-                guard canContinue else {
-                    break
-                }
-
-                switch previousState {
-                    case .notStarted:
-                        fatalError()
-
-                    case .focus:
-                        state = .rest(restDuration)
-                        elapsedTime = 0
-
-                    case .rest:
-                        state = .focus(focusDuration)
-                        elapsedTime = 0
-
-                    case .waitingForConfirmation:
-                        fatalError()
-                }
+            if !foo() {
+                break
             }
-
-            elapsedTime += 1
-
-            printLoading()
 
             try await Task.sleep(for: .seconds(interval))
         }
     }
 
-    private func printLoading() {
+    private mutating func foo() -> Bool {
+        let finalDuration: TimeInterval = {
+            switch state {
+                case .notStarted:
+                    return 0
+
+                case .focus:
+                    return focusDuration
+
+                case .rest:
+                    return restDuration
+
+                case .waitingForConfirmation:
+                    return 0
+            }
+        }()
+
+        if elapsedTime >= finalDuration {
+            let previousState = state
+
+            state = .waitingForConfirmation
+
+            let confirmationMessage: String
+
+            switch previousState {
+                case .focus:
+                    confirmationMessage = "Lets take a break!\nPress 'Y' to continue."
+
+                case .rest:
+                    confirmationMessage = "Back to work!\nPress 'Y' to continue."
+
+                default:
+                    fatalError()
+            }
+
+            print(confirmationMessage)
+
+            // ask for continuation
+            let character = readLine()
+
+            let canContinue = {
+                guard let character else {
+                    return false
+                }
+
+                return continuationCharacters.contains(character) ||
+                continuationCharacters.contains(character.lowercased())
+            }()
+
+            guard canContinue else {
+                return false
+            }
+
+            switch previousState {
+                case .notStarted:
+                    fatalError()
+
+                case .focus:
+                    state = .rest(restDuration)
+                    elapsedTime = 0
+
+                case .rest:
+                    state = .focus(focusDuration)
+                    elapsedTime = 0
+
+                case .waitingForConfirmation:
+                    fatalError()
+            }
+        }
+
+        elapsedTime += 1
+
+        printLoading(for: elapsedTime)
+
+        return true
+    }
+
+    private func printLoading(for elapsedTime: TimeInterval) {
         var loadingBars = ""
 
         for _ in 0..<Int(elapsedTime) {
@@ -165,5 +173,4 @@ struct pomodoro: AsyncParsableCommand {
         print("\(loadingBars) %\(loadingPercentage)", terminator: "\r")
         fflush(stdout)
     }
-}
 }
