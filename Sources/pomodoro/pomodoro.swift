@@ -27,7 +27,10 @@ struct pomodoro: AsyncParsableCommand {
 
     /// Duration of the rest timer, in minutes.
     /// Which will be recieved from standard output.
-    @Option(name: .short, help: "Duration of the resting timer, in minutes.")
+    @Option(
+        name: [.customLong("rest"), .customShort("r")],
+        help: "Duration of the resting timer, in minutes."
+    )
     var restDuration: TimeInterval = 5.0
     
     /// Elapsed time which will be check against durations.
