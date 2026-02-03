@@ -23,14 +23,19 @@ struct pomodoro: AsyncParsableCommand {
         }
     }
 
+    /// Application state machine.
     private enum State: Codable, Comparable {
+        /// Application has been fired but argument parser didnot hand it over.
         case notStarted
 
+        /// Application is under `focus` state.
         case focus(TimeInterval)
 
+        /// Application is under `rest` state.
         case rest(TimeInterval)
 
-        case askingForConfirmation
+        /// Application is waiting for user's input.
+        case waitingForConfirmation
 
         private var index: UInt8 {
             switch self {
@@ -43,7 +48,7 @@ struct pomodoro: AsyncParsableCommand {
                 case .rest:
                     return 2
 
-                case .askingForConfirmation:
+                case .waitingForConfirmation:
                     return 3
             }
         }
