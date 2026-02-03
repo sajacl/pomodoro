@@ -120,6 +120,15 @@ struct pomodoro: AsyncParsableCommand {
 
         printLoading(for: elapsedTime)
 
+        guard isCounterPassedHorizon else {
+            // time has not passed yet
+            return true
+        }
+
+        guard askUserIfWantsToContinue() else {
+            return false
+        }
+
         // check for state change needs
         if checkIfTimeHasPassed() {
             let previousState = state
@@ -145,7 +154,7 @@ struct pomodoro: AsyncParsableCommand {
         return true
     }
 
-    private func checkIfTimeHasPassed() -> Bool {
+    private var isCounterPassedHorizon: Bool {
         let horizonDuration: TimeInterval = {
             switch state {
                 case .focus:
