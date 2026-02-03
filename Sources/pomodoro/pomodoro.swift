@@ -100,9 +100,6 @@ struct pomodoro: AsyncParsableCommand {
             restDuration: restDuration
         )
 
-        // first start point
-        state = .focus(focusDuration)
-
         // run loop
         while true {
             if !foo() {
@@ -114,6 +111,11 @@ struct pomodoro: AsyncParsableCommand {
     }
 
     private mutating func foo() -> CanContinue {
+        // first start point
+        if case let .readyToStart(focusDuration, _) = state {
+            state = .focus(focusDuration)
+        }
+
         elapsedTime += 1
 
         printLoading(for: elapsedTime)
@@ -123,12 +125,12 @@ struct pomodoro: AsyncParsableCommand {
             return true
         }
 
+        // check for state change needs
+        let previousState = state
+
         guard askUserIfWantsToContinue() else {
             return false
         }
-
-        // check for state change needs
-        let previousState = state
 
         switch previousState {
             case .focus:
@@ -172,16 +174,19 @@ struct pomodoro: AsyncParsableCommand {
 
         switch previousState {
             case .focus:
-                confirmationMessage = "Lets take a break!\nPress 'Y' to continue."
+                confirmationMessage = "Lets take a break! 🎉"
 
             case .rest:
-                confirmationMessage = "Back to work!\nPress 'Y' to continue."
+                confirmationMessage = "Back to work!"
 
             default:
                 fatalError("Asking user to continue in an invalid state.")
         }
 
+        notify(title: "Pomodoro", message: confirmationMessage)
+
         print(confirmationMessage)
+        print("Press 'Y' to continue.")
 
         // ask for continuation
         let character = readLine()
@@ -210,4 +215,17 @@ struct pomodoro: AsyncParsableCommand {
         print("\(loadingBars) %\(loadingPercentage)", terminator: "\r")
         fflush(stdout)
     }
+}
+
+private func notify(title: String, message: String, subtitle: String? = nil) {
+    func esc(_ s: String) -> String { s.replacingOccurrences(of: "\"", with: "\\\"") }
+
+    var args = ["-e", "display notification \"\(esc(message))\" with title \"\(esc(title))\""]
+
+    if let s = subtitle { args[1] += " subtitle \"\(esc(s))\"" }
+
+    let p = Process()
+    p.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+    p.arguments = args
+    try? p.run()
 }
