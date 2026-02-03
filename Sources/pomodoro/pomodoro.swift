@@ -10,6 +10,35 @@ struct pomodoro: AsyncParsableCommand {
     @Option(name: .short, help: "Duration of the resting timer, in minutes.")
     var restDuration: TimeInterval = 5.0
 
+    private enum State: Codable, Comparable {
+        case notStarted
+
+        case focus(TimeInterval)
+
+        case rest(TimeInterval)
+
+        case askingForConfirmation
+
+        private var index: UInt8 {
+            switch self {
+                case .notStarted:
+                    return 0
+
+                case .focus:
+                    return 1
+
+                case .rest:
+                    return 2
+
+                case .askingForConfirmation:
+                    return 3
+            }
+        }
+
+        static func < (lhs: State, rhs: State) -> Bool {
+            return lhs.index < rhs.index
+        }
+    }
     mutating func run() async throws {
         print(focusDuration)
     }
