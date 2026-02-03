@@ -17,7 +17,9 @@ struct pomodoro: AsyncParsableCommand {
 
     private var state: State = .notStarted {
         didSet {
-            print(state)
+            #if DEBUG
+                print(state)
+            #endif
         }
     }
 
