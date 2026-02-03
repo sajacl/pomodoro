@@ -111,19 +111,41 @@ struct pomodoro: AsyncParsableCommand {
     }
 
     private mutating func foo() -> CanContinue {
-        if !checkIfTimeHasPassed() {
-            return false
-        }
+        // check if time passed?
+        // if yes user wants to rest?
+        // if yes start time
+        // if no close
 
         elapsedTime += 1
 
         printLoading(for: elapsedTime)
 
+        // check for state change needs
+        if checkIfTimeHasPassed() {
+            let previousState = state
+
+            if askUserIfWantsToContinue() {
+                switch previousState {
+                    case .focus:
+                        state = .rest(restDuration)
+                        elapsedTime = 0
+
+                    case .rest:
+                        state = .focus(focusDuration)
+                        elapsedTime = 0
+
+                    case .notStarted, .readyToStart, .waitingForConfirmation:
+                        fatalError()
+                }
+            } else {
+                return false
+            }
+        }
+
         return true
     }
 
-    private mutating func checkIfTimeHasPassed() -> CanContinue {
-        // check for state change
+    private func checkIfTimeHasPassed() -> Bool {
         let horizonDuration: TimeInterval = {
             switch state {
                 case .focus:
@@ -137,57 +159,42 @@ struct pomodoro: AsyncParsableCommand {
             }
         }()
 
-        if elapsedTime >= horizonDuration {
-            let previousState = state
+        return elapsedTime >= horizonDuration
+    }
 
-            state = .waitingForConfirmation
+    private mutating func askUserIfWantsToContinue() -> Bool {
+        let previousState = state
 
-            let confirmationMessage: String
+        state = .waitingForConfirmation
 
-            switch previousState {
-                case .focus:
-                    confirmationMessage = "Lets take a break!\nPress 'Y' to continue."
+        let confirmationMessage: String
 
-                case .rest:
-                    confirmationMessage = "Back to work!\nPress 'Y' to continue."
+        switch previousState {
+            case .focus:
+                confirmationMessage = "Lets take a break!\nPress 'Y' to continue."
 
-                default:
-                    fatalError()
-            }
+            case .rest:
+                confirmationMessage = "Back to work!\nPress 'Y' to continue."
 
-            print(confirmationMessage)
+            default:
+                fatalError()
+        }
 
-            // ask for continuation
-            let character = readLine()
+        print(confirmationMessage)
 
-            let canContinue = {
-                guard let character else {
-                    return false
-                }
+        // ask for continuation
+        let character = readLine()
 
-                return continuationCharacters.contains(character) ||
-                continuationCharacters.contains(character.lowercased())
-            }()
-
-            guard canContinue else {
+        let wantsToContinue = {
+            guard let character else {
                 return false
             }
 
-            switch previousState {
-                case .focus:
-                    state = .rest(restDuration)
-                    elapsedTime = 0
+            return continuationCharacters.contains(character) ||
+            continuationCharacters.contains(character.uppercased())
+        }()
 
-                case .rest:
-                    state = .focus(focusDuration)
-                    elapsedTime = 0
-
-                case .notStarted, .readyToStart, .waitingForConfirmation:
-                    fatalError()
-            }
-        }
-
-        return true
+        return wantsToContinue
     }
 
     private func printLoading(for elapsedTime: TimeInterval) {
