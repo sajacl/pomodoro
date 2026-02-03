@@ -17,8 +17,14 @@ struct pomodoro: AsyncParsableCommand {
     /// Duration of the pomodoro timer, in minutes.
     /// Which will be recieved from standard output.
     @Argument(help: "Duration of the pomodoro timer, in minutes.")
-    var focusDuration: TimeInterval = 25.0
-    
+    var focusDuration: TimeInterval = {
+        #if DEBUG
+            return 5.0
+        #else
+            return 25.0
+        #endif
+    }()
+
     /// Duration of the rest timer, in minutes.
     /// Which will be recieved from standard output.
     @Option(name: .short, help: "Duration of the resting timer, in minutes.")
