@@ -1,8 +1,8 @@
 import Foundation
 import ArgumentParser
 
-/// Gap interval in minutes.
-private let interval: Duration = 1.0 * 60
+/// Gap interval in seconds.
+private let interval: Duration = 1.0
 
 /// Allowed character that will move state forward.
 private let continuationCharacters: Set<Character> = ["Y"]
@@ -152,10 +152,10 @@ struct pomodoro: AsyncParsableCommand {
         let horizonDuration: TimeInterval = {
             switch state {
                 case .focus:
-                    return focusDuration
+                    return focusDuration * 60
 
                 case .rest:
-                    return restDuration
+                    return restDuration * 60
 
                 case .notStarted, .readyToStart, .waitingForConfirmation:
                     fatalError("Checking horizon duration in an invalid state.")
@@ -210,7 +210,7 @@ struct pomodoro: AsyncParsableCommand {
             loadingBars.append("|")
         }
 
-        let loadingPercentage = Int(elapsedTime / focusDuration * 100)
+        let loadingPercentage = Int(elapsedTime / (focusDuration * 60) * 100)
 
         print("\(loadingBars) %\(loadingPercentage)", terminator: "\r")
         fflush(stdout)
