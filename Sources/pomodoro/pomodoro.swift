@@ -4,16 +4,24 @@ import ArgumentParser
 /// Gap interval in minutes.
 private let interval: TimeInterval = 1.0 * 60
 
+/// Allowed character that will move state forward.
+private let continuationCharacters: Set<Character> = ["Y"]
+
 @main
 @available(macOS 12, iOS 15, visionOS 1, tvOS 15, watchOS 8, *)
 struct pomodoro: AsyncParsableCommand {
+    /// Duration of the pomodoro timer, in minutes.
+    /// Which will be recieved from standard output.
     @Argument(help: "Duration of the pomodoro timer, in minutes.")
     var focusDuration: TimeInterval = 25.0
-
+    
+    /// Duration of the rest timer, in minutes.
+    /// Which will be recieved from standard output.
     @Option(name: .short, help: "Duration of the resting timer, in minutes.")
     var restDuration: TimeInterval = 5.0
-
-    private var duration: TimeInterval = 0.0
+    
+    /// Elapsed time which will be check against durations.
+    private var elapsedTime: TimeInterval = 0.0
 
     private var state: State = .notStarted {
         didSet {
@@ -69,6 +77,7 @@ struct pomodoro: AsyncParsableCommand {
         // run loop
         while true {
             duration += 1
+            elapsedTime += 1
 
             printLoading()
 
@@ -79,13 +88,14 @@ struct pomodoro: AsyncParsableCommand {
     private func printLoading() {
         var loadingBars = ""
 
-        for _ in 0..<Int(self.duration) {
+        for _ in 0..<Int(elapsedTime) {
             loadingBars.append("|")
         }
 
-        let loadingPercentage = Int(duration / focusDuration * 100)
+        let loadingPercentage = Int(elapsedTime / focusDuration * 100)
 
         print("\(loadingBars) %\(loadingPercentage)", terminator: "\r")
         fflush(stdout)
     }
+}
 }
