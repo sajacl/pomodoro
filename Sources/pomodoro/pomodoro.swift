@@ -154,23 +154,28 @@ struct pomodoro: AsyncParsableCommand {
         return true
     }
 
+    // MARK: Counter management
+
+    private var duration: Duration {
+        switch state {
+            case .focus:
+                return focusDuration
+                
+            case .rest:
+                return restDuration
+                
+            case .notStarted, .readyToStart, .waitingForConfirmation:
+                fatalError("Getting duration in an invalid state.")
+        }
+    }
+
     private var isCounterPassedHorizon: Bool {
-        let horizonDuration: TimeInterval = {
-            switch state {
-                case .focus:
-                    return focusDuration * 60
-
-                case .rest:
-                    return restDuration * 60
-
-                case .notStarted, .readyToStart, .waitingForConfirmation:
-                    fatalError("Checking horizon duration in an invalid state.")
-            }
-        }()
+        let horizonDuration = duration * 60
 
         return elapsedTime >= horizonDuration
     }
 
+    // MARK: Continuation check
     private mutating func askUserIfWantsToContinue() -> Bool {
         let previousState = state
 
