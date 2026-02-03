@@ -253,11 +253,15 @@ struct pomodoro: AsyncParsableCommand {
 }
 
 private func notify(title: String, message: String, subtitle: String? = nil) {
-    func esc(_ s: String) -> String { s.replacingOccurrences(of: "\"", with: "\\\"") }
+    func esc(_ s: String) -> String {
+        s.replacingOccurrences(of: "\"", with: "\\\"")
+    }
 
     var args = ["-e", "display notification \"\(esc(message))\" with title \"\(esc(title))\""]
 
-    if let s = subtitle { args[1] += " subtitle \"\(esc(s))\"" }
+    if let s = subtitle {
+        args[1] += " subtitle \"\(esc(s))\""
+    }
 
     let p = Process()
     p.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
