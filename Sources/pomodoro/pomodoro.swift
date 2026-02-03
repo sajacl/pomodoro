@@ -36,6 +36,9 @@ struct pomodoro: AsyncParsableCommand {
         /// Application has been fired but argument parser didnot hand it over.
         case notStarted
 
+        /// Application is ready to start with given durations.
+        case readyToStart(focusDuration: TimeInterval, restDuration: TimeInterval)
+
         /// Application is under `focus` state.
         case focus(TimeInterval)
 
@@ -50,14 +53,17 @@ struct pomodoro: AsyncParsableCommand {
                 case .notStarted:
                     return 0
 
-                case .focus:
+                case .readyToStart:
                     return 1
 
-                case .rest:
+                case .focus:
                     return 2
 
-                case .waitingForConfirmation:
+                case .rest:
                     return 3
+
+                case .waitingForConfirmation:
+                    return UInt8.max
             }
         }
 
@@ -65,14 +71,21 @@ struct pomodoro: AsyncParsableCommand {
             return lhs.index < rhs.index
         }
 
-        mutating func start(with duration: TimeInterval) {
+        fileprivate mutating func startFocus(with duration: TimeInterval) {
             self = .focus(duration)
+        }
+
+        fileprivate mutating func startRest(with duration: TimeInterval) {
+            self = .rest(duration)
         }
     }
 
     mutating func run() async throws {
         // initial state
-        state.start(with: focusDuration)
+        state = .readyToStart(
+            focusDuration: focusDuration,
+            restDuration: restDuration
+        )
 
         // run loop
         while true {
@@ -85,19 +98,17 @@ struct pomodoro: AsyncParsableCommand {
     }
 
     private mutating func foo() -> Bool {
+        // check for state change
         let finalDuration: TimeInterval = {
             switch state {
-                case .notStarted:
-                    return 0
-
                 case .focus:
                     return focusDuration
 
                 case .rest:
                     return restDuration
 
-                case .waitingForConfirmation:
-                    return 0
+                case .notStarted, .readyToStart, .waitingForConfirmation:
+                    fatalError()
             }
         }()
 
@@ -138,9 +149,6 @@ struct pomodoro: AsyncParsableCommand {
             }
 
             switch previousState {
-                case .notStarted:
-                    fatalError()
-
                 case .focus:
                     state = .rest(restDuration)
                     elapsedTime = 0
@@ -149,7 +157,7 @@ struct pomodoro: AsyncParsableCommand {
                     state = .focus(focusDuration)
                     elapsedTime = 0
 
-                case .waitingForConfirmation:
+                case .notStarted, .readyToStart, .waitingForConfirmation:
                     fatalError()
             }
         }
