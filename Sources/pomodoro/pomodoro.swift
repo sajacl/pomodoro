@@ -151,6 +151,8 @@ struct pomodoro: AsyncParsableCommand {
                 fatalError("Checking state change needs in an invalid state.")
         }
 
+        elapsedTime = 0
+
         return true
     }
 
@@ -196,6 +198,7 @@ struct pomodoro: AsyncParsableCommand {
 
         notify(title: "Pomodoro", message: confirmationMessage)
 
+        print("\n")
         print(confirmationMessage)
         print("Press 'Y' to continue.")
 
