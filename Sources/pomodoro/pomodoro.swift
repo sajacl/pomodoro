@@ -49,6 +49,8 @@ struct pomodoro: AsyncParsableCommand {
     }
 
     mutating func run() async throws {
+        state = .focus(focusDuration)
+
         // run loop
         while true {
             duration += 1
