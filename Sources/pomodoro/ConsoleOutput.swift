@@ -4,7 +4,7 @@ import Foundation
 private let loadingBarWidth: Int = 30
 
 @MainActor
-enum UI {
+enum ConsoleOutput {
     /// Tracks previous loading output's length for clean overwriting.
     private static var lastLoadingOutputLength: Int = 0
 
