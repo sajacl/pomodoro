@@ -196,7 +196,7 @@ struct pomodoro: AsyncParsableCommand {
                 fatalError("Asking user to continue in an invalid state.")
         }
 
-        notify(title: "Pomodoro", message: confirmationMessage)
+        NotificationProxy.notify(title: "Pomodoro", message: confirmationMessage)
 
         print("\n")
         print(confirmationMessage)
@@ -250,21 +250,4 @@ struct pomodoro: AsyncParsableCommand {
 
         lastLoadingOutputLength = output.count
     }
-}
-
-private func notify(title: String, message: String, subtitle: String? = nil) {
-    func esc(_ s: String) -> String {
-        s.replacingOccurrences(of: "\"", with: "\\\"")
-    }
-
-    var args = ["-e", "display notification \"\(esc(message))\" with title \"\(esc(title))\""]
-
-    if let s = subtitle {
-        args[1] += " subtitle \"\(esc(s))\""
-    }
-
-    let p = Process()
-    p.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-    p.arguments = args
-    try? p.run()
 }
