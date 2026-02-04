@@ -17,6 +17,7 @@ typealias Duration = TimeInterval
 
 @main
 @available(macOS 12, iOS 15, visionOS 1, tvOS 15, watchOS 8, *)
+@MainActor
 struct pomodoro: AsyncParsableCommand {
     /// Duration of the pomodoro timer, in minutes.
     /// Which will be recieved from standard output.
@@ -126,7 +127,7 @@ struct pomodoro: AsyncParsableCommand {
 
         elapsedTime += 1
 
-        printLoading(for: elapsedTime)
+        ConsoleOutput.printLoading(for: elapsedTime, horizon: duration)
 
         guard isCounterPassedHorizon else {
             // time has not passed yet
@@ -215,39 +216,5 @@ struct pomodoro: AsyncParsableCommand {
         }()
 
         return shouldContinue
-    }
-
-    // MARK: Loading bar
-    private mutating func printLoading(for elapsedTime: TimeInterval) {
-        // Spinner animation frames
-        let spinnerFrames = ["|", "/", "-", "\\"]
-        let spinner = spinnerFrames[Int(elapsedTime) % spinnerFrames.count]
-
-        let barWidth = loadingBarWidth
-
-        let progress = min(elapsedTime / (duration * 60), 1.0)
-
-        let filledBars = Int(progress * Double(barWidth))
-
-        let emptyBars = barWidth - filledBars
-
-        let filledBarsStr = String(repeating: "█", count: filledBars)
-        let emptyBards = String(repeating: "░", count: emptyBars)
-        let bar = filledBarsStr + emptyBards
-
-        let loadingPercentage = Int(progress * 100)
-        var output = "\(spinner) [\(bar)] \(loadingPercentage)%"
-
-        // Pad with spaces if output is shorter than last one
-        let paddingLength = lastLoadingOutputLength - output.count
-
-        if paddingLength > 0 {
-            output += String(repeating: " ", count: paddingLength)
-        }
-
-        print("\r\(output)", terminator: "")
-        fflush(stdout)
-
-        lastLoadingOutputLength = output.count
     }
 }
