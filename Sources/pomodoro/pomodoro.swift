@@ -12,7 +12,8 @@ private let loadingBarWidth: Int = 30
 
 private typealias CanContinue = Bool
 
-private typealias Duration = TimeInterval
+typealias Duration = TimeInterval
+//private typealias RemainingDuration = TimeInterval
 
 @main
 @available(macOS 12, iOS 15, visionOS 1, tvOS 15, watchOS 8, *)
