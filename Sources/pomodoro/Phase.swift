@@ -1,12 +1,12 @@
 import Foundation
 
-/// Object which is responsible for Phase management/transition in a pomorodo lifecycle.
+///// Object which is responsible for Phase management/transition in a pomorodo lifecycle.
 struct Phase: Codable, Equatable {
     /// A cycle in the phase.
     let cycle: Cycle
 
     /// Current state of a phase which will be either `focusing` or `resting`.
-    var state: State
+    /*private(set)*/ var state: State
 
     /// State of a phase.
     enum State: Codable, Equatable {
@@ -17,8 +17,22 @@ struct Phase: Codable, Equatable {
         case resting
     }
 
-    init(cycle: Cycle, state: State) {
+    init(cycle: Cycle) {
         self.cycle = cycle
-        self.state = state
+        self.state = .focusing
+    }
+
+    mutating func startResting() {
+        state = .resting
+    }
+
+    var duration: Duration {
+        switch state {
+            case .focusing:
+                return cycle.focus
+
+            case .resting:
+                return cycle.rest ?? 5.0
+        }
     }
 }
