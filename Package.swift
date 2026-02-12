@@ -5,8 +5,9 @@ import PackageDescription
 
 let package = Package(
     name: "pomodoro",
+    platforms: [.macOS(.v14)],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.0.0")
+        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.7.0")
     ],
     targets: [
         .executableTarget(
