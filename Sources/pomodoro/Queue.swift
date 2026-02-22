@@ -23,8 +23,31 @@ struct Queue: Equatable, Codable, Sequence, CustomDebugStringConvertible {
         return node
     }
 
+    /// Ensures this queue has unique ownership of its nodes before mutating.
+    private mutating func ensureUnique() {
+        guard let head, !isKnownUniquelyReferenced(&self.head) else {
+            return
+        }
+
+        // Make a deep copy of all nodes
+        var oldNode = head
+        let newHead = Node(value: oldNode.value)
+        var newNode = newHead
+
+        while let nextOld = oldNode.next {
+            let copied = Node(value: nextOld.value)
+            newNode.next = copied
+            newNode = copied
+            oldNode = nextOld
+        }
+
+        self.head = newHead
+    }
+
     /// Adds a `Cycle` to the end of the queue.
     mutating func enqueue(_ cycle: Cycle) {
+        ensureUnique()
+
         if head == nil {
             head = Node(value: cycle)
         } else {
@@ -34,6 +57,8 @@ struct Queue: Equatable, Codable, Sequence, CustomDebugStringConvertible {
 
     /// Removes and returns the `Cycle` at the front of the queue.
     mutating func dequeue() -> Cycle? {
+        ensureUnique()
+
         guard let _head = head else {
             return nil
         }
