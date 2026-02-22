@@ -10,7 +10,7 @@ struct Cycle: Codable, Equatable {
 }
 
 extension [Cycle] {
-    static func makeDefault(
+    static func create(
         focusDuration: Duration,
         restDuration: Duration,
         cycleCount: UInt8
@@ -25,7 +25,7 @@ extension [Cycle] {
         }
 
         // contains longer resting cycle
-        cycles.append(Cycle(focus: focusDuration, rest: 30.0))
+        cycles.append(Cycle(focus: focusDuration, rest: 7.5 * Double(cycleCount)))
 
         return cycles
     }
