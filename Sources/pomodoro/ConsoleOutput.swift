@@ -5,10 +5,10 @@ private let loadingBarWidth: Int = 30
 
 @MainActor
 enum ConsoleOutput {
-    /// Tracks previous loading output's length for clean overwriting.
+    /// Tracks the previous loading output length for proper console overwrite.
     private static var lastLoadingOutputLength: Int = 0
 
-    /// Method responsible for printing out the loading bar based on `elapsedTime` and `horizon` duration.
+    /// Prints a progress/loading bar to the console, reflecting elapsed time versus a set duration.
     static func printLoading(for elapsedTime: TimeInterval, horizon: Duration) {
         // Spinner animation frames
         let spinnerFrames = ["|", "/", "-", "\\"]
