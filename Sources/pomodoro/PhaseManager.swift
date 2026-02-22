@@ -13,9 +13,6 @@ struct PhaseManager: Codable, Equatable {
     private var cycles: [Cycle]
 
     /// <#Description#>
-    private(set) var currentCycle: Cycle
-
-    /// <#Description#>
     private(set) var currentPhase: Phase?
 
     /// Elapsed time which will be check against durations.
@@ -24,13 +21,16 @@ struct PhaseManager: Codable, Equatable {
     init(autoAdvance: Bool, cycles: [Cycle]) {
         self.autoAdvance = autoAdvance
         self.cycles = cycles
-        currentCycle = self.cycles.removeFirst()
+
         elapsedTime = 0.0
     }
 
     mutating func start() {
-        print("Starting a new cycle for \(currentCycle.focus) minutes")
-        currentPhase = Phase(cycle: currentCycle)
+        let cycle = cycles.removeFirst()
+
+        print("Starting a new cycle for \(cycle.focus) minutes")
+
+        currentPhase = Phase(cycle: cycle)
     }
 
     mutating func advance() -> CanContinue {
