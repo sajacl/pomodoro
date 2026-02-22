@@ -56,7 +56,8 @@ struct PhaseManager: Codable, Equatable {
         // check for state change needs
         let previousPhase = currentPhase
 
-        guard askUserIfWantsToContinue(previousPhase: previousPhase) else {
+        if !autoAdvance,
+           !askUserIfWantsToContinue(previousPhase: previousPhase) {
             return false
         }
 
@@ -111,10 +112,6 @@ struct PhaseManager: Codable, Equatable {
 
     // MARK: Continuation check
     private mutating func askUserIfWantsToContinue(previousPhase: Phase?) -> Bool {
-        if autoAdvance {
-            return true
-        }
-
         let confirmationMessage: String
 
         switch previousPhase?.state {
