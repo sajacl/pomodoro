@@ -34,11 +34,11 @@ struct pomodoro: AsyncParsableCommand {
         help: "Duration of the resting counter, in minutes."
     )
     var restDuration: Duration = {
-#if DEBUG
-        return 0.1
-#else
-        return 5.0
-#endif
+        #if DEBUG
+            return 0.1
+        #else
+            return 5.0
+        #endif
     }()
 
     /// Duration of the rest timer, in minutes.
@@ -84,7 +84,7 @@ struct pomodoro: AsyncParsableCommand {
 
     // MARK: Main
     mutating func run() async throws {
-        let cycles: [Cycle] = .makeDefault(
+        let cycles: [Cycle] = .create(
             focusDuration: focusDuration,
             restDuration: restDuration,
             cycleCount: cycleCount
