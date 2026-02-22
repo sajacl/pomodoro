@@ -1,15 +1,17 @@
 import Foundation
 
-/// Object describing a cycle.
+/// Describes a single Pomodoro cycle, with a focus and optional rest period.
 struct Cycle: Codable, Equatable {
-    /// Focusing duration of a cycle.
+    /// Duration (in minutes) for focusing during this cycle.
     var focus: Duration
 
-    /// Resting duration of a cycle.
+    /// Duration (in minutes) for resting after this cycle. Optional.
     var rest: Duration?
 }
 
 extension [Cycle] {
+    /// Creates a list of cycles with a specified focus, rest duration, and count.
+    /// The last cycle has a longer rest period.
     static func create(
         focusDuration: Duration,
         restDuration: Duration,
