@@ -6,10 +6,10 @@ private let continuationCharacters: Set<Character> = ["Y"]
 /// Object that manages
 @MainActor
 struct PhaseManager: Codable, Equatable {
-    /// <#Description#>
+    /// Boolean flag that indicates wheter the app should advance without asking.
     private let autoAdvance: Bool
 
-    /// <#Description#>
+    /// List of cycles.
     private var cycles: [Cycle]
 
     /// <#Description#>
