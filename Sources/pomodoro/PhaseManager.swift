@@ -26,11 +26,10 @@ struct PhaseManager: Codable, Equatable {
 
     mutating func start() {
         guard let cycle = cycles.dequeue() else {
-            print("No cycle in the queue.")
-            return
+            fatalError()
         }
 
-        print("Starting a new cycle for \(cycle.focus) minutes")
+        print("Starting a new cycle for \(cycle.focus + (cycle.rest ?? 0)) minutes")
 
         phase = Phase(cycle: cycle)
     }
@@ -38,7 +37,7 @@ struct PhaseManager: Codable, Equatable {
     @MainActor
     mutating func advance() -> CanContinue {
         guard let duration else {
-            return true
+            return false
         }
 
         elapsedTime += 1
@@ -59,11 +58,23 @@ struct PhaseManager: Codable, Equatable {
         // check for state change needs
         let previousPhase = phase
 
-        if !autoAdvance,
-           !askUserIfWantsToContinue(previousPhase: previousPhase) {
+        announceEndOfTheCycle(previousPhase: previousPhase)
+
+        if autoAdvance {
+            moveForward(from: previousPhase)
+            return true
+        }
+
+        guard askUserForContinuation() else {
             return false
         }
 
+        moveForward(from: previousPhase)
+
+        return true
+    }
+
+    private mutating func moveForward(from previousPhase: Phase?) {
         let message: String
 
         switch previousPhase?.state {
@@ -93,8 +104,6 @@ struct PhaseManager: Codable, Equatable {
         elapsedTime = 0
 
         print(message)
-
-        return true
     }
 
     // MARK: Counter management
@@ -113,8 +122,7 @@ struct PhaseManager: Codable, Equatable {
         }
     }
 
-    // MARK: Continuation check
-    private mutating func askUserIfWantsToContinue(previousPhase: Phase?) -> Bool {
+    private func announceEndOfTheCycle(previousPhase: Phase?) {
         let confirmationMessage: String
 
         switch previousPhase?.state {
@@ -132,6 +140,10 @@ struct PhaseManager: Codable, Equatable {
 
         print("\n")
         print(confirmationMessage)
+    }
+
+    // MARK: Continuation check
+    private func askUserForContinuation() -> Bool {
         print("Press 'Y' to continue.")
 
         // ask for continuation
