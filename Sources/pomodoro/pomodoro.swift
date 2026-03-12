@@ -67,7 +67,7 @@ struct pomodoro: AsyncParsableCommand {
         case notStarted
 
         /// Application is ready to start with given durations.
-        case readyToStart(cycles: [Cycle])
+        case readyToStart
 
         /// Application
         case running/*(Phase)*/
@@ -87,18 +87,12 @@ struct pomodoro: AsyncParsableCommand {
             return
         }
 
-        let cycles: [Cycle] = .create(
-            focusDuration: focusDuration,
-            restDuration: restDuration,
-            cycleCount: cycleCount
-        )
-
-        state = .readyToStart(cycles: cycles)
+        state = .readyToStart
 
         // initialization
-        iterator = Iterator(autoAdvance: autoAdvance, cycles: cycles)
+        iterator = Iterator(autoAdvance: autoAdvance)
 
-        iterator.start()
+        iterator.start(cycles: cycleCount, focusDuration: focusDuration, restDuration: restDuration)
         state = .running
 
         // run loop
