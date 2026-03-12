@@ -4,35 +4,38 @@ import Foundation
 private let continuationCharacters: Set<Character> = ["Y"]
 
 /// Object that manages
-@MainActor
 struct PhaseManager: Codable, Equatable {
     /// Boolean flag that indicates wheter the app should advance without asking.
     private let autoAdvance: Bool
 
     /// List of cycles.
-    private var cycles: [Cycle]
+    private var cycles: Queue
 
     /// <#Description#>
-    private(set) var currentPhase: Phase?
+    private(set) var phase: Phase?
 
     /// Elapsed time which will be check against durations.
     private(set) var elapsedTime: TimeInterval
 
     init(autoAdvance: Bool, cycles: [Cycle]) {
         self.autoAdvance = autoAdvance
-        self.cycles = cycles
+        self.cycles = Queue(cycles: cycles)
 
         elapsedTime = 0.0
     }
 
     mutating func start() {
-        let cycle = cycles.removeFirst()
+        guard let cycle = cycles.dequeue() else {
+            print("No cycle in the queue.")
+            return
+        }
 
         print("Starting a new cycle for \(cycle.focus) minutes")
 
-        currentPhase = Phase(cycle: cycle)
+        phase = Phase(cycle: cycle)
     }
 
+    @MainActor
     mutating func advance() -> CanContinue {
         guard let duration else {
             return true
@@ -54,7 +57,7 @@ struct PhaseManager: Codable, Equatable {
         }
 
         // check for state change needs
-        let previousPhase = currentPhase
+        let previousPhase = phase
 
         if !autoAdvance,
            !askUserIfWantsToContinue(previousPhase: previousPhase) {
@@ -69,19 +72,19 @@ struct PhaseManager: Codable, Equatable {
                 message = "Starting a rest phase for \(restDuration) minutes."
 
                 // advance phase
-                currentPhase?.startResting()
+                phase?.startResting()
 
             case .resting:
-                currentPhase = nil
+                phase = nil
 
                 // replace phase with a new one
                 // aka start fresh
-                let cycle = cycles.removeFirst()
+                let cycle = cycles.dequeue()!
                 let newPhase = Phase(cycle: cycle)
 
                 message = "Starting a new cycle for \(cycle.focus) minutes"
 
-                currentPhase = newPhase
+                phase = newPhase
 
             default:
                 fatalError("Checking state change needs in an invalid state.")
@@ -97,7 +100,7 @@ struct PhaseManager: Codable, Equatable {
     // MARK: Counter management
 
     private var duration: Duration? {
-        guard let phase = currentPhase else {
+        guard let phase = phase else {
             return nil
         }
 
