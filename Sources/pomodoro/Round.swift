@@ -1,19 +1,18 @@
 import Foundation
 
-///// Object which is responsible for Phase management/transition in a pomorodo lifecycle.
+/// Object describing a round in pomodoro.
 struct Round: Codable, Equatable {
-    /// A cycle in the phase.
+    /// A cycle in the round.
     let cycle: Cycle
 
-    /// Current state of a phase which will be either `focusing` or `resting`.
+    /// Current phase of a round.
     private(set) var phase: Phase?
 
-    /// State of a phase.
     enum Phase: Codable, Equatable {
-        /// Focusing cycle in a phase.
+        /// Focusing cycle in a round.
         case focusing
 
-        /// Resting cycle in a phase.
+        /// Resting cycle in a round.
         case resting
     }
 
