@@ -13,10 +13,10 @@ extension pomodoro {
         private var cycles: Queue
 
         /// <#Description#>
-        private(set) var currentRound: Round
+        private var currentRound: Round
 
         /// Elapsed time which will be check against durations.
-        private(set) var elapsedTime: TimeInterval
+        private var elapsedTime: TimeInterval
 
         init(autoAdvance: Bool, cycles c: [Cycle]) {
             self.autoAdvance = autoAdvance
@@ -35,6 +35,20 @@ extension pomodoro {
 
         @MainActor
         mutating func advance() -> ShouldContinue {
+            let duration: Duration? = {
+                guard let phase = currentRound.phase else {
+                    return nil
+                }
+
+                switch phase {
+                    case .focusing:
+                        return currentRound.cycle.focus
+
+                    case .resting:
+                        return currentRound.cycle.rest
+                }
+            }()
+
             guard let duration else {
                 return false
             }
@@ -56,8 +70,8 @@ extension pomodoro {
                 return true
             }
 
-            let currentRound = currentRound
-            announceEndOfThePhase(for: currentRound)
+            let _currentRound = currentRound
+            announceEndOfThePhase(for: _currentRound)
 
             if autoAdvance {
                 return moveForward()
@@ -68,20 +82,6 @@ extension pomodoro {
             }
 
             return moveForward()
-        }
-
-        private var duration: Duration? {
-            guard let phase = currentRound.phase else {
-                return nil
-            }
-
-            switch phase {
-                case .focusing:
-                    return currentRound.cycle.focus
-
-                case .resting:
-                    return currentRound.cycle.rest
-            }
         }
 
         private func announceEndOfThePhase(for round: Round) {
@@ -104,7 +104,6 @@ extension pomodoro {
             print(confirmationMessage)
         }
 
-        // MARK: Continuation check
         private func askUserForContinuation() -> ShouldContinue {
             let continuationCharactersDescription = continuationCharacters
                 .map { "'\($0)'" }
@@ -165,7 +164,10 @@ extension pomodoro {
         private mutating func startNewRound() -> Cycle {
             // replace phase with a new one
             // aka start fresh
-            let cycle = cycles.dequeue()!
+            guard let cycle = cycles.dequeue() else {
+                fatalError()
+            }
+
             let newPhase = Round(cycle: cycle)
 
             currentRound = newPhase
