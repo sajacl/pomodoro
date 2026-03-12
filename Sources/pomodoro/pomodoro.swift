@@ -14,7 +14,6 @@ typealias Duration = TimeInterval
 
 @main
 @available(macOS 12, iOS 15, visionOS 1, tvOS 15, watchOS 8, *)
-@MainActor
 struct pomodoro: AsyncParsableCommand {
     /// Duration of the pomodoro timer, in minutes.
     /// Which will be recieved from standard output.
@@ -83,6 +82,7 @@ struct pomodoro: AsyncParsableCommand {
     private var phaseManager: PhaseManager!
 
     // MARK: Main
+    @MainActor
     mutating func run() async throws {
         let cycles: [Cycle] = .create(
             focusDuration: focusDuration,
