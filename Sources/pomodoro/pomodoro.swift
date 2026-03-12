@@ -76,12 +76,17 @@ struct pomodoro: AsyncParsableCommand {
         case paused
     }
 
-    private var phaseManager: PhaseManager!
+    private var iterator: pomodoro.Iterator!
 
     // MARK: Main
     @MainActor
     mutating func run() async throws {
         // bootstrap
+        guard cycleCount > 0 else {
+            print("Cycle count must be greater than zero.")
+            return
+        }
+
         let cycles: [Cycle] = .create(
             focusDuration: focusDuration,
             restDuration: restDuration,
@@ -91,14 +96,14 @@ struct pomodoro: AsyncParsableCommand {
         state = .readyToStart(cycles: cycles)
 
         // initialization
-        phaseManager = PhaseManager(autoAdvance: autoAdvance, cycles: cycles)
+        iterator = Iterator(autoAdvance: autoAdvance, cycles: cycles)
 
-        phaseManager.start()
+        iterator.start()
         state = .running
 
         // run loop
         while true {
-            if !phaseManager.advance() {
+            if !iterator.advance() {
                 break
             }
 
