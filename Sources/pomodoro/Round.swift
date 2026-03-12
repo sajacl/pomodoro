@@ -2,51 +2,57 @@ import Foundation
 
 /// Object describing a round in pomodoro.
 struct Round: Codable, Equatable {
-    /// A cycle in the round.
-    let cycle: Cycle
+    private var cycles: Queue
 
-    /// Current phase of a round.
-    private(set) var phase: Phase?
+    var phase: Phase
+//    var isFinished: Bool { cycles.count == 0 }
 
-    enum Phase: Codable, Equatable {
-        /// Focusing cycle in a round.
-        case focusing
+    init(cycleCount: UInt8, focusDuration: Duration, restDuration: Duration?) {
+        cycles = Queue()
 
-        /// Resting cycle in a round.
-        case resting
-    }
+        for _ in 0..<(cycleCount - 1) {
+            let cycle = Cycle(focus: focusDuration, rest: restDuration)
 
-    init(cycle: Cycle) {
-        self.cycle = cycle
-    }
-
-    mutating func start() {
-        guard phase == nil else {
-            fatalError()
+            cycles.enqueue(cycle)
         }
 
-        phase = .focusing
+        // contains longer resting cycle
+        cycles.enqueue(Cycle(focus: focusDuration, rest: 7.5 * Double(cycleCount)))
+
+        phase = Phase(cycle: cycles.dequeue()!)
     }
 
-    mutating func switchToRest() {
-        guard phase == .focusing else {
-            fatalError()
-        }
+    init(cycles: Queue) {
+        self.cycles = cycles
 
-        phase = .resting
+        phase = Phase(cycle: self.cycles.dequeue()!)
     }
 
-    var duration: Duration? {
-        guard let phase else {
-            return nil
+    mutating func next() -> Cycle? {
+        cycles.dequeue()
+    }
+
+    mutating func moveForward() throws {
+        if phase.state == .focusing, phase.cycle.rest != nil {
+            phase.switchToRest()
+        } else {
+            try moveToNextCycle()
+        }
+    }
+
+    private mutating func moveToNextCycle() throws {
+        // replace phase with a new one
+        // aka start fresh
+        guard let newCycle = cycles.dequeue() else {
+            throw ReachedEndOfCyclesFailure()
         }
 
-        switch phase {
-            case .focusing:
-                return cycle.focus
+        phase = Phase(cycle: newCycle)
+    }
+}
 
-            case .resting:
-                return cycle.rest ?? 5.0
-        }
+struct ReachedEndOfCyclesFailure: LocalizedError {
+    var errorDescription: String? {
+        "Reached the end of cycles."
     }
 }
