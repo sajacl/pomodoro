@@ -30,15 +30,11 @@ extension pomodoro {
             self.autoAdvance = autoAdvance
         }
 
-        init(autoAdvance: Bool, cycles: Queue) {
-            self.autoAdvance = autoAdvance
-        }
-
-        init(autoAdvance: Bool, cycles: [Cycle]) {
-            self.autoAdvance = autoAdvance
-        }
-
-        mutating func start(cycles: UInt8, focusDuration: Duration, restDuration: Duration?) {
+        mutating func start(
+            cycles: UInt8,
+            with focusDuration: Duration,
+            and restDuration: Duration?
+        ) {
             round = Round(
                 cycleCount: cycles,
                 focusDuration: focusDuration,
@@ -48,13 +44,13 @@ extension pomodoro {
             state = .advancing
         }
 
-        mutating func start(cycles: Queue) {
+        mutating func start(with cycles: Queue) {
             round = Round(cycles: cycles)
 
             state = .advancing
         }
 
-        mutating func start(cycles: [Cycle]) {
+        mutating func start(with cycles: [Cycle]) {
             round = Round(cycles: Queue(cycles))
 
             state = .advancing
@@ -168,7 +164,9 @@ extension pomodoro {
         }
 
         private mutating func moveForward() -> ShouldContinue {
-            let message: String
+            let currentPhase = round.phase
+
+            let couldAdvanceCurrentPhase: Bool
 
             switch state {
                 case .notStarted:
@@ -176,10 +174,45 @@ extension pomodoro {
 
                 case .advancing:
                     do {
-                        let currentPhase = round.phase.state
-
                         try round.moveForward()
 
+                        couldAdvanceCurrentPhase = true
+                    } catch {
+                        startNewRoundIfPossible()
+
+                        couldAdvanceCurrentPhase = false
+                    }
+
+                case .finished:
+                    startNewRoundIfPossible()
+
+                    couldAdvanceCurrentPhase = false
+            }
+
+            announceCompletion(
+                previousState: state,
+                currentPhase: currentPhase.state,
+                couldAdvanceCurrentPhase: couldAdvanceCurrentPhase
+            )
+
+            elapsedDuration = 0
+
+            return true
+        }
+
+        private func announceCompletion(
+            previousState: State,
+            currentPhase: Phase.State,
+            couldAdvanceCurrentPhase: Bool
+        ) {
+            let message: String
+
+            switch state {
+                case .notStarted:
+                    fatalError()
+
+                case .advancing:
+                    if couldAdvanceCurrentPhase {
                         switch currentPhase {
                             case .focusing:
                                 if let restDuration = round.phase.cycle.rest {
@@ -191,23 +224,15 @@ extension pomodoro {
                             case .resting:
                                 message = "Starting a new focus cycle for '\(round.phase.cycle.focus)' minutes"
                         }
-                    } catch {
+                    } else {
                         message = "Starting a new round!"
-
-                        startNewRoundIfPossible()
                     }
 
                 case .finished:
                     message = "Starting a new round!"
-
-                    startNewRoundIfPossible()
             }
 
-            elapsedDuration = 0
-
             print(message)
-
-            return true
         }
 
         private mutating func startNewRoundIfPossible() {

@@ -51,7 +51,13 @@ struct pomodoro: AsyncParsableCommand {
         name: [.customLong("auto_advance"), .customShort("a")],
         help: "Flag indicating if the counter should automatically advance to the next phase after completion."
     )
-    var autoAdvance: Bool = false
+    var autoAdvance: Bool = {
+        #if DEBUG
+            return true
+        #else
+            return false
+        #endif
+    }()
 
     private var state: State = .notStarted {
         didSet {
@@ -92,7 +98,7 @@ struct pomodoro: AsyncParsableCommand {
         // initialization
         iterator = Iterator(autoAdvance: autoAdvance)
 
-        iterator.start(cycles: cycleCount, focusDuration: focusDuration, restDuration: restDuration)
+        iterator.start(cycles: cycleCount, with: focusDuration, and: restDuration)
         state = .running
 
         // run loop

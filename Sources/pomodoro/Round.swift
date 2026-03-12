@@ -5,7 +5,6 @@ struct Round: Codable, Equatable {
     private var cycles: Queue
 
     var phase: Phase
-//    var isFinished: Bool { cycles.count == 0 }
 
     init(cycleCount: UInt8, focusDuration: Duration, restDuration: Duration?) {
         cycles = Queue()
@@ -17,7 +16,15 @@ struct Round: Codable, Equatable {
         }
 
         // contains longer resting cycle
-        cycles.enqueue(Cycle(focus: focusDuration, rest: 7.5 * Double(cycleCount)))
+        let lastRestCycle = {
+            #if DEBUG
+                return 0.1
+            #else
+                return 7.5 * Double(cycleCount)
+            #endif
+        }()
+
+        cycles.enqueue(Cycle(focus: focusDuration, rest: lastRestCycle))
 
         phase = Phase(cycle: cycles.dequeue()!)
     }
