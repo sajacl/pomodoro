@@ -7,7 +7,7 @@ private let interval: Duration = 1.0
 /// Allowed character that will move state forward.
 private let continuationCharacters: Set<Character> = ["Y"]
 
-typealias CanContinue = Bool
+typealias ShouldContinue = Bool
 
 typealias Duration = TimeInterval
 //private typealias RemainingDuration = TimeInterval
@@ -84,15 +84,16 @@ struct pomodoro: AsyncParsableCommand {
     // MARK: Main
     @MainActor
     mutating func run() async throws {
+        // bootstrap
         let cycles: [Cycle] = .create(
             focusDuration: focusDuration,
             restDuration: restDuration,
             cycleCount: cycleCount
         )
 
-        // initial state
         state = .readyToStart(cycles: cycles)
 
+        // initialization
         phaseManager = PhaseManager(autoAdvance: autoAdvance, cycles: cycles)
 
         phaseManager.start()
