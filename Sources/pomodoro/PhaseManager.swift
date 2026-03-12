@@ -12,38 +12,38 @@ struct PhaseManager: Codable, Equatable {
     private var cycles: Queue
 
     /// <#Description#>
-    private(set) var phase: Phase?
+    private(set) var round: Round
 
     /// Elapsed time which will be check against durations.
     private(set) var elapsedTime: TimeInterval
 
-    init(autoAdvance: Bool, cycles: [Cycle]) {
+    init(autoAdvance: Bool, cycles c: [Cycle]) {
         self.autoAdvance = autoAdvance
-        self.cycles = Queue(cycles: cycles)
+        cycles = Queue(cycles: c)
 
         elapsedTime = 0.0
+
+        let cycle = cycles.dequeue()!
+
+        round = Round(cycle: cycle)
     }
 
     mutating func start() {
-        guard let cycle = cycles.dequeue() else {
-            fatalError()
-        }
-
-        print("Starting a new cycle for \(cycle.focus + (cycle.rest ?? 0)) minutes")
-
-        phase = Phase(cycle: cycle)
+        round.start()
     }
 
     @MainActor
-    mutating func advance() -> CanContinue {
+    mutating func advance() -> ShouldContinue {
         guard let duration else {
             return false
         }
 
+        // moving forward
         elapsedTime += 1
 
         ConsoleOutput.printLoading(for: elapsedTime, horizon: duration)
 
+        // book keeping
         let isCounterPassedHorizon: Bool = {
             let horizonDuration = duration * 60
 
@@ -55,77 +55,38 @@ struct PhaseManager: Codable, Equatable {
             return true
         }
 
-        // check for state change needs
-        let previousPhase = phase
-
-        announceEndOfTheCycle(previousPhase: previousPhase)
+        let currentRound = round
+        announceEndOfThePhase(for: currentRound)
 
         if autoAdvance {
-            moveForward(from: previousPhase)
-            return true
+            return moveForward()
         }
 
         guard askUserForContinuation() else {
             return false
         }
 
-        moveForward(from: previousPhase)
-
-        return true
+        return moveForward()
     }
-
-    private mutating func moveForward(from previousPhase: Phase?) {
-        let message: String
-
-        switch previousPhase?.state {
-            case .focusing:
-                let restDuration = previousPhase?.cycle.rest ?? 0
-                message = "Starting a rest phase for \(restDuration) minutes."
-
-                // advance phase
-                phase?.startResting()
-
-            case .resting:
-                phase = nil
-
-                // replace phase with a new one
-                // aka start fresh
-                let cycle = cycles.dequeue()!
-                let newPhase = Phase(cycle: cycle)
-
-                message = "Starting a new cycle for \(cycle.focus) minutes"
-
-                phase = newPhase
-
-            default:
-                fatalError("Checking state change needs in an invalid state.")
-        }
-
-        elapsedTime = 0
-
-        print(message)
-    }
-
-    // MARK: Counter management
 
     private var duration: Duration? {
-        guard let phase = phase else {
+        guard let phase = round.phase else {
             return nil
         }
 
-        switch phase.state {
+        switch phase {
             case .focusing:
-                return phase.cycle.focus
+                return round.cycle.focus
 
             case .resting:
-                return phase.cycle.rest
+                return round.cycle.rest
         }
     }
 
-    private func announceEndOfTheCycle(previousPhase: Phase?) {
+    private func announceEndOfThePhase(for round: Round) {
         let confirmationMessage: String
 
-        switch previousPhase?.state {
+        switch round.phase {
             case .focusing:
                 confirmationMessage = "Lets take a break! 🎉"
 
@@ -143,7 +104,7 @@ struct PhaseManager: Codable, Equatable {
     }
 
     // MARK: Continuation check
-    private func askUserForContinuation() -> Bool {
+    private func askUserForContinuation() -> ShouldContinue {
         let continuationCharactersDescription = continuationCharacters
             .map { "'\($0)'" }
             .joined(separator: "|")
@@ -165,5 +126,50 @@ struct PhaseManager: Codable, Equatable {
         }()
 
         return shouldContinue
+    }
+
+    private mutating func moveForward() -> ShouldContinue {
+        let message: String
+
+        switch round.phase {
+            case .focusing:
+                if let restDuration = round.cycle.rest {
+                    message = "Starting rest phase for '\(restDuration)' minutes."
+
+                    // advance phase
+                    round.switchToRest()
+                } else {
+                    let cycle = startNewRound()
+
+                    message = "Starting a new focus cycle for '\(cycle.focus)' minutes"
+                }
+
+            case .resting:
+                let cycle = startNewRound()
+
+                message = "Starting a new focus cycle for '\(cycle.focus)' minutes"
+
+            default:
+                return false
+        }
+
+        elapsedTime = 0
+
+        print(message)
+
+        return true
+    }
+
+    private mutating func startNewRound() -> Cycle {
+        // replace phase with a new one
+        // aka start fresh
+        let cycle = cycles.dequeue()!
+        let newPhase = Round(cycle: cycle)
+
+        round = newPhase
+
+        round.start()
+
+        return cycle
     }
 }
