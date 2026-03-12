@@ -6,10 +6,14 @@ struct Queue: Equatable, Codable, Sequence, CustomDebugStringConvertible {
     private var head: Node?
 
     /// Initializes a queue with a list of cycles.
-    init(cycles: [Cycle]) {
+    init(_ cycles: [Cycle]) {
         for cycle in cycles {
             enqueue(cycle)
         }
+    }
+
+    init() {
+        // no-op
     }
 
     /// The last node in the queue.
