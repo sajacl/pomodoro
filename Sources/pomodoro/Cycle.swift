@@ -20,7 +20,7 @@ extension [Cycle] {
         var cycles: [Cycle] = []
         cycles.reserveCapacity(Int(cycleCount))
 
-        for _ in 0..<cycleCount - 1 {
+        for _ in 0..<(cycleCount - 1) {
             cycles.append(
                 Cycle(focus: focusDuration, rest: restDuration)
             )
