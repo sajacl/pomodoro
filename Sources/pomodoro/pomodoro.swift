@@ -4,9 +4,6 @@ import ArgumentParser
 /// Gap interval in seconds.
 private let interval: Duration = 1.0
 
-/// Allowed character that will move state forward.
-private let continuationCharacters: Set<Character> = ["Y"]
-
 typealias ShouldContinue = Bool
 
 typealias Duration = TimeInterval
