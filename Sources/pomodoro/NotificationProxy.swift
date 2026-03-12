@@ -1,6 +1,8 @@
 import Foundation
 
 enum NotificationProxy {
+    /// Sends a notification with given parameters.
+    /// - Warning: Creates a sub-process.
     static func notify(title: String, message: String, subtitle: String? = nil) {
         var args = [
             "-e",
