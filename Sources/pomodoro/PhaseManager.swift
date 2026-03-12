@@ -144,7 +144,11 @@ struct PhaseManager: Codable, Equatable {
 
     // MARK: Continuation check
     private func askUserForContinuation() -> Bool {
-        print("Press 'Y' to continue.")
+        let continuationCharactersDescription = continuationCharacters
+            .map { "'\($0)'" }
+            .joined(separator: "|")
+
+        print("Press \(continuationCharactersDescription) to continue.")
 
         // ask for continuation
         let character = readLine()
@@ -154,8 +158,10 @@ struct PhaseManager: Codable, Equatable {
                 return false
             }
 
-            return continuationCharacters.contains(character) ||
-            continuationCharacters.contains(character.uppercased())
+            return continuationCharacters
+                .contains(where: { continuationCharacter in
+                    continuationCharacter.lowercased() == character.lowercased()
+                })
         }()
 
         return shouldContinue
