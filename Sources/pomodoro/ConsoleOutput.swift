@@ -41,4 +41,8 @@ enum ConsoleOutput {
 
         lastLoadingOutputLength = output.count
     }
+
+    static func print(_ str: String) {
+        Swift.print(str)
+    }
 }
