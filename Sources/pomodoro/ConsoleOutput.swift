@@ -36,7 +36,7 @@ enum ConsoleOutput {
             output += String(repeating: " ", count: paddingLength)
         }
 
-        print("\r\(output)", terminator: "")
+        Swift.print("\r\(output)", terminator: "")
         fflush(stdout)
 
         lastLoadingOutputLength = output.count
