@@ -1,10 +1,14 @@
 import Foundation
 
 /// Object describing a round in pomodoro.
-struct Round: Codable, Equatable {
+struct Round: Equatable, Codable {
     private var cycles: Queue
 
-    var phase: Phase
+    private var currentCycle: Cycle
+
+    private(set) var phase: Phase
+
+    private(set) var index: UInt
 
     init(cycleCount: UInt8, focusDuration: Duration, restDuration: Duration?) {
         cycles = Queue()
@@ -26,24 +30,38 @@ struct Round: Codable, Equatable {
 
         cycles.enqueue(Cycle(focus: focusDuration, rest: lastRestCycle))
 
-        phase = Phase(cycle: cycles.dequeue()!)
+        currentCycle = cycles.dequeue()!
+
+        phase = .focused(duration: currentCycle.focus)
+
+        index = 1
+
+        print("[\(index)] Starting a new focus cycle for '\(currentCycle.focus)' minutes.")
     }
 
-    init(cycles: Queue) {
+    init?(cycles: Queue) {
         self.cycles = cycles
 
-        phase = Phase(cycle: self.cycles.dequeue()!)
-    }
+        guard let _cycle = self.cycles.dequeue() else {
+            return nil
+        }
 
-    mutating func next() -> Cycle? {
-        cycles.dequeue()
+        currentCycle = _cycle
+
+        phase = .focused(duration: currentCycle.focus)
+
+        index = 1
+
+        print("[\(index)] Starting a new focus cycle for '\(currentCycle.focus)' minutes.")
     }
 
     mutating func moveForward() throws {
-        if phase.state == .focusing, phase.cycle.rest != nil {
-            phase.switchToRest()
-        } else {
-            try moveToNextCycle()
+        switch phase {
+            case .focused where currentCycle.rest != nil:
+                phase = .resting(duration: currentCycle.rest!)
+
+            default:
+                try moveToNextCycle()
         }
     }
 
@@ -54,7 +72,17 @@ struct Round: Codable, Equatable {
             throw ReachedEndOfCyclesFailure()
         }
 
-        phase = Phase(cycle: newCycle)
+        currentCycle = newCycle
+
+        phase = .focused(duration: currentCycle.focus)
+
+        let (_index, isOverflowed) = index.addingReportingOverflow(1)
+
+        if isOverflowed {
+            index = 1
+        } else {
+            index = _index
+        }
     }
 }
 
