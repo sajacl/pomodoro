@@ -1,11 +1,11 @@
 import Foundation
 
-/// Describes a single Pomodoro cycle, with a focus and optional rest period.
+/// Describes a single Pomodoro cycle.
 struct Cycle: Codable, Equatable {
-    /// Duration (in minutes) for focusing during this cycle.
+    /// Duration (in minutes) for focusing.
     var focus: Duration
 
-    /// Duration (in minutes) for resting after this cycle. Optional.
+    /// Optional duration (in minutes) for resting.
     var rest: Duration?
 }
 
