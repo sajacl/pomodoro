@@ -16,9 +16,9 @@ enum ConsoleOutput {
 
         let barWidth = loadingBarWidth
 
-        let progress = min(elapsedDuration / (horizon * 60), 1.0)
+        let progress = min(elapsedDuration / (horizon * 60.0), 1.0)
 
-        let filledBars = Int(progress * Double(barWidth))
+        let filledBars = Int(progress * Duration(barWidth))
 
         let emptyBars = barWidth - filledBars
 
@@ -26,7 +26,7 @@ enum ConsoleOutput {
         let emptyBards = String(repeating: "░", count: emptyBars)
         let bar = filledBarsStr + emptyBards
 
-        let loadingPercentage = Int(progress * 100)
+        let loadingPercentage = Int(progress * 100.0)
         var output = "\(spinner) [\(bar)] \(loadingPercentage)%"
 
         // Pad with spaces if output is shorter than last one
