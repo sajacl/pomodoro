@@ -1,13 +1,5 @@
 import Foundation
 
-struct ActiveCycle: Equatable, Codable {
-    let index: UInt
-
-    let cycle: Cycle
-
-    var phase: Phase
-}
-
 /// Object describing a round in pomodoro.
 struct Round: Equatable, Codable {
     private var cycles: Queue
