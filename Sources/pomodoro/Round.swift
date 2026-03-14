@@ -76,12 +76,6 @@ struct Round: Equatable, Codable {
             index = newIndex
         }
 
-        cycle = ActiveCycle(index: index, cycle: newCycle, phase: .focused(duration: newCycle.focus))
-    }
-}
-
-struct ReachedEndOfCyclesFailure: LocalizedError {
-    var errorDescription: String? {
-        "Reached the end of cycles."
+        cycle = ActiveCycle(index: index, cycle: newCycle, phase: .focused)
     }
 }
