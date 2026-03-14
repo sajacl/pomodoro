@@ -8,7 +8,7 @@ struct Round: Equatable, Codable {
     /// The currently active cycle (focus or rest phase).
     private(set) var cycle: ActiveCycle
 
-    init(cycleCount: UInt8, focusDuration: Duration, restDuration: Duration?) {
+    init(cycleCount: UInt8, focusDuration: Duration, restDuration: Duration) {
         cycles = Queue()
 
         for _ in 0..<(cycleCount - 1) {
@@ -18,11 +18,11 @@ struct Round: Equatable, Codable {
         }
 
         // contains longer resting cycle
-        let lastRestCycle = {
+        let lastRestCycle: Duration = {
             #if DEBUG
                 return 0.1
             #else
-                return 7.5 * Double(cycleCount)
+                return 7.5 * Duration(cycleCount)
             #endif
         }()
 
@@ -52,7 +52,7 @@ struct Round: Equatable, Codable {
 
     mutating func moveForward() throws {
         switch cycle.phase {
-            case .focused where cycle.cycle.rest != nil:
+            case .focused where cycle.cycle.rest != 0.0:
                 cycle.phase = .resting
 
             default:
@@ -107,7 +107,7 @@ extension Round {
                     return cycle.focus
 
                 case .resting:
-                    return cycle.rest ?? 0
+                    return cycle.rest
             }
         }
     }
