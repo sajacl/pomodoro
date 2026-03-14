@@ -2,8 +2,10 @@ import Foundation
 
 /// Object describing a round in pomodoro.
 struct Round: Equatable, Codable {
+    /// The queue of remaining cycles in this round.
     private var cycles: Queue
 
+    /// The currently active cycle (focus or rest phase).
     private(set) var cycle: ActiveCycle
 
     init(cycleCount: UInt8, focusDuration: Duration, restDuration: Duration?) {
@@ -77,5 +79,36 @@ struct Round: Equatable, Codable {
         }
 
         cycle = ActiveCycle(index: index, cycle: newCycle, phase: .focused)
+    }
+}
+
+extension Round {
+    /// Object describing the current cycle (aka active cycle).
+    struct ActiveCycle: Equatable, Codable {
+        /// The index of this cycle in the round, starting from 1.
+        let index: UInt
+
+        /// The underlying cycle (focus/rest durations).
+        fileprivate let cycle: Cycle
+
+        /// The phase (focused or resting) currently active.
+        fileprivate(set) var phase: Phase
+
+        fileprivate init(index: UInt, cycle: Cycle, phase: Phase = .focused) {
+            self.index = index
+            self.cycle = cycle
+            self.phase = phase
+        }
+
+        /// The duration (in minutes) of the current phase.
+        var duration: Duration {
+            switch phase {
+                case .focused:
+                    return cycle.focus
+
+                case .resting:
+                    return cycle.rest ?? 0
+            }
+        }
     }
 }
