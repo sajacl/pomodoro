@@ -29,7 +29,7 @@ struct Round: Equatable, Codable {
         let _cycle = cycles.dequeue()!
         let index: UInt = 1
 
-        cycle = ActiveCycle(index: index, cycle: _cycle, phase: .focused(duration: _cycle.focus))
+        cycle = ActiveCycle(index: index, cycle: _cycle)
 
         print("[\(index)] Starting a new focus cycle for '\(_cycle.focus)' minutes.")
     }
@@ -43,7 +43,7 @@ struct Round: Equatable, Codable {
 
         let index: UInt = 1
 
-        cycle = ActiveCycle(index: index, cycle: _cycle, phase: .focused(duration: _cycle.focus))
+        cycle = ActiveCycle(index: index, cycle: _cycle)
 
         print("[\(index)] Starting a new focus cycle for '\(_cycle.focus)' minutes.")
     }
@@ -51,7 +51,7 @@ struct Round: Equatable, Codable {
     mutating func moveForward() throws {
         switch cycle.phase {
             case .focused where cycle.cycle.rest != nil:
-                cycle.phase = .resting(duration: cycle.cycle.rest!)
+                cycle.phase = .resting
 
             default:
                 try moveToNextCycle()
