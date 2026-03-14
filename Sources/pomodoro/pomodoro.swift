@@ -1,12 +1,10 @@
 import Foundation
 import ArgumentParser
 
-/// Gap interval in seconds.
-private let interval: Duration = 1.0
+/// RunLoop interval in seconds.
+private let interval: TimeInterval = 1.0
 
 typealias ShouldContinue = Bool
-
-typealias Duration = TimeInterval
 
 @main
 @available(macOS 12, iOS 15, visionOS 1, tvOS 15, watchOS 8, *)
@@ -81,7 +79,15 @@ struct Pomodoro: AsyncParsableCommand {
     @MainActor
     mutating func run() async throws {
         // bootstrap
+
+        // guard against zero cycle count.
         guard cycleCount > 0 else {
+            print("Cycle count must be greater than zero.")
+            return
+        }
+
+        // guard against minus durations.
+        guard focusDuration > 0.0, restDuration >= 0.0 else {
             print("Cycle count must be greater than zero.")
             return
         }
