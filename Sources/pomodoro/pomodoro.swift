@@ -7,11 +7,10 @@ private let interval: Duration = 1.0
 typealias ShouldContinue = Bool
 
 typealias Duration = TimeInterval
-//private typealias RemainingDuration = TimeInterval
 
 @main
 @available(macOS 12, iOS 15, visionOS 1, tvOS 15, watchOS 8, *)
-struct pomodoro: AsyncParsableCommand {
+struct Pomodoro: AsyncParsableCommand {
     /// Duration of the pomodoro timer, in minutes.
     /// Which will be recieved from standard output.
     @Argument(help: "Duration of the pomodoro counter, in minutes.")
@@ -59,13 +58,7 @@ struct pomodoro: AsyncParsableCommand {
         #endif
     }()
 
-    private var state: State = .notStarted {
-        didSet {
-            #if DEBUG
-                print(state)
-            #endif
-        }
-    }
+    private var state: State = .notStarted
 
     /// Application state machine.
     private enum State: Codable/*, Comparable*/ {
@@ -82,7 +75,7 @@ struct pomodoro: AsyncParsableCommand {
         case paused
     }
 
-    private var iterator: pomodoro.Iterator!
+    private var iterator: Pomodoro.Iterator!
 
     // MARK: Main
     @MainActor
@@ -96,14 +89,20 @@ struct pomodoro: AsyncParsableCommand {
         state = .readyToStart
 
         // initialization
-        iterator = Iterator(autoAdvance: autoAdvance)
+        iterator = Iterator.makeDefault(autoAdvance: autoAdvance)
 
         iterator.start(cycles: cycleCount, with: focusDuration, and: restDuration)
         state = .running
 
         // run loop
         while true {
-            if !iterator.advance() {
+            do {
+                try iterator.advance()
+            } catch is ReachedEndOfCyclesFailure {
+                // ask user
+                // iterator.start(cycles: cycleCount, with: focusDuration, and: restDuration)
+                break
+            } catch {
                 break
             }
 
