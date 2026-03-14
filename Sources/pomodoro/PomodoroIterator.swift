@@ -94,7 +94,7 @@ extension Pomodoro {
             // moving forward
             elapsedDuration += 1
 
-            let horizon: Duration = round.cycle.phase.duration
+            let horizon: Duration = round.cycle.duration
 
             displayLoading(elapsedDuration, horizon)
 
@@ -166,7 +166,7 @@ extension Pomodoro {
 
         @MainActor
         private func moveForward() throws {
-            let currentPhase = round.cycle.phase
+            let currentPhase = round.cycle
 
             try round.moveForward()
 
@@ -176,14 +176,16 @@ extension Pomodoro {
         }
 
         @MainActor
-        private func announceNewPhase(basedOn oldPhase: Phase) {
+        private func announceNewPhase(basedOn oldCycle: Round.ActiveCycle) {
             let message: String
 
-            switch oldPhase {
-                case let .focused(duration):
+            let duration = oldCycle.duration
+
+            switch oldCycle.phase {
+                case .focused:
                     message = "[\(round.cycle.index)] Starting rest phase for '\(duration)' minutes."
 
-                case let .resting(duration):
+                case .resting:
                     message = "[\(round.cycle.index)] Starting a new focus cycle for '\(duration)' minutes."
             }
 
