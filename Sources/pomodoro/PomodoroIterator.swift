@@ -23,14 +23,23 @@ extension Pomodoro {
 
         init(
             autoAdvance: Bool,
-            display: @escaping @MainActor (String) -> Void = { ConsoleOutput.print($0) },
-            displayLoading: @escaping @MainActor (Duration, Duration) -> Void = { ConsoleOutput.printLoading(for: $0, horizon: $1) },
-            notify: @escaping @MainActor (String) -> Void = { NotificationProxy.notify(message: $0) }
+            display: @escaping @MainActor (String) -> Void,
+            displayLoading: @escaping @MainActor (Duration, Duration) -> Void,
+            notify: @escaping @MainActor (String) -> Void
         ) {
             self.autoAdvance = autoAdvance
             self.display = display
             self.displayLoading = displayLoading
             self.notify = notify
+        }
+
+        static func makeDefault(autoAdvance: Bool) -> Iterator {
+            Iterator(
+                autoAdvance: autoAdvance,
+                display: { ConsoleOutput.print($0) },
+                displayLoading: { ConsoleOutput.printLoading(for: $0, horizon: $1) },
+                notify: { NotificationProxy.notify(message: $0) }
+            )
         }
 
         enum CodingKeys: String, CodingKey {
