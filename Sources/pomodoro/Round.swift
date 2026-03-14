@@ -1,14 +1,18 @@
 import Foundation
 
+struct ActiveCycle: Equatable, Codable {
+    let index: UInt
+
+    let cycle: Cycle
+
+    var phase: Phase
+}
+
 /// Object describing a round in pomodoro.
 struct Round: Equatable, Codable {
     private var cycles: Queue
 
-    private var currentCycle: Cycle
-
-    private(set) var phase: Phase
-
-    private(set) var index: UInt
+    private(set) var cycle: ActiveCycle
 
     init(cycleCount: UInt8, focusDuration: Duration, restDuration: Duration?) {
         cycles = Queue()
@@ -30,13 +34,12 @@ struct Round: Equatable, Codable {
 
         cycles.enqueue(Cycle(focus: focusDuration, rest: lastRestCycle))
 
-        currentCycle = cycles.dequeue()!
+        let _cycle = cycles.dequeue()!
+        let index: UInt = 1
 
-        phase = .focused(duration: currentCycle.focus)
+        cycle = ActiveCycle(index: index, cycle: _cycle, phase: .focused(duration: _cycle.focus))
 
-        index = 1
-
-        print("[\(index)] Starting a new focus cycle for '\(currentCycle.focus)' minutes.")
+        print("[\(index)] Starting a new focus cycle for '\(_cycle.focus)' minutes.")
     }
 
     init?(cycles: Queue) {
@@ -46,19 +49,17 @@ struct Round: Equatable, Codable {
             return nil
         }
 
-        currentCycle = _cycle
+        let index: UInt = 1
 
-        phase = .focused(duration: currentCycle.focus)
+        cycle = ActiveCycle(index: index, cycle: _cycle, phase: .focused(duration: _cycle.focus))
 
-        index = 1
-
-        print("[\(index)] Starting a new focus cycle for '\(currentCycle.focus)' minutes.")
+        print("[\(index)] Starting a new focus cycle for '\(_cycle.focus)' minutes.")
     }
 
     mutating func moveForward() throws {
-        switch phase {
-            case .focused where currentCycle.rest != nil:
-                phase = .resting(duration: currentCycle.rest!)
+        switch cycle.phase {
+            case .focused where cycle.cycle.rest != nil:
+                cycle.phase = .resting(duration: cycle.cycle.rest!)
 
             default:
                 try moveToNextCycle()
@@ -72,17 +73,18 @@ struct Round: Equatable, Codable {
             throw ReachedEndOfCyclesFailure()
         }
 
-        currentCycle = newCycle
+        var index = cycle.index
 
-        phase = .focused(duration: currentCycle.focus)
+        let (newIndex, overflow) = index.addingReportingOverflow(1)
 
-        let (_index, isOverflowed) = index.addingReportingOverflow(1)
-
-        if isOverflowed {
+        if overflow {
+            // starting from the beginning
             index = 1
         } else {
-            index = _index
+            index = newIndex
         }
+
+        cycle = ActiveCycle(index: index, cycle: newCycle, phase: .focused(duration: newCycle.focus))
     }
 }
 
