@@ -29,4 +29,33 @@ struct RoundTests {
 
         #expect(round != nil)
     }
+
+    @Test
+    func creation_firstCycle_equals() throws {
+        let cyclesCount = 1
+
+        let focus: Duration = 1.0
+        let rest: Duration = 1.0
+
+        var cycles = Queue()
+
+        for _ in 0..<(cyclesCount) {
+            let cycle = Cycle(focus: focus, rest: rest)
+
+            cycles.enqueue(cycle)
+        }
+
+        let round = try #require(Round(cycles: cycles))
+
+        let _firstCycle = cycles.dequeue()
+        let firstCycle = try #require(_firstCycle)
+
+        let mockActiveCycle = Round.ActiveCycle(
+            index: 1,
+            cycle: firstCycle,
+            phase: .focused
+        )
+
+        #expect(round.cycle == mockActiveCycle)
+    }
 }
