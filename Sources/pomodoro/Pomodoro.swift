@@ -24,12 +24,6 @@ final class Pomodoro: Codable, Equatable {
     /// The current round of Pomodoro cycles being run.
     private var round: Round!
 
-    /// Amount of time elapsed within the current phase, measured in minutes.
-    ///
-    /// This is compared against the current phase's duration (`Round.cycle.duration`)
-    /// to determine when to trigger a phase transition.
-    private var elapsedDuration: Duration = 0.0
-
     init(
         autoAdvance: Bool,
         display: @escaping @MainActor (String) -> Void,
@@ -46,7 +40,7 @@ final class Pomodoro: Codable, Equatable {
         Pomodoro(
             autoAdvance: autoAdvance,
             display: { ConsoleOutput.print($0) },
-            displayLoading: { ConsoleOutput.printLoading(for: $0, horizon: $1) },
+            displayLoading: { ConsoleOutput.printLoading(for: $0, against: $1) },
             notify: { NotificationProxy.notify(message: $0) }
         )
     }
@@ -64,29 +58,27 @@ final class Pomodoro: Codable, Equatable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.autoAdvance = try container.decode(Bool.self, forKey: .autoAdvance)
         self.round = try container.decodeIfPresent(Round.self, forKey: .round)
-        self.elapsedDuration = try container.decode(Duration.self, forKey: .elapsedDuration)
 
         // restore our default closures after decoding
         self.display = { ConsoleOutput.print($0) }
-        self.displayLoading = { ConsoleOutput.printLoading(for: $0, horizon: $1) }
+        self.displayLoading = { ConsoleOutput.printLoading(for: $0, against: $1) }
         self.notify = { NotificationProxy.notify(message: $0) }
     }
 
     static func == (lhs: Pomodoro, rhs: Pomodoro) -> Bool {
         lhs.autoAdvance == rhs.autoAdvance &&
-        lhs.round == rhs.round &&
-        lhs.elapsedDuration == rhs.elapsedDuration
+        lhs.round == rhs.round
     }
 
     func start(
         cycles: UInt8,
         with focusDuration: Duration,
-        and restDuration: Duration?
+        and restDuration: Duration
     ) {
         round = Round(
             cycleCount: cycles,
             focusDuration: focusDuration,
-            restDuration: focusDuration
+            restDuration: restDuration
         )
     }
 
@@ -101,32 +93,24 @@ final class Pomodoro: Codable, Equatable {
     @MainActor
     func advance() throws {
         // moving forward
-        elapsedDuration += 1.0
+        let result = round.advance()
 
-        let horizon: Duration = round.cycle.duration
+        switch result {
+            case let .inProgress(elapsedDuration, horizon):
+                displayLoading(elapsedDuration, horizon)
 
-        displayLoading(elapsedDuration, horizon)
+            case .endOfPhase:
+                announceEndOfPhase()
 
-        // counter book keeping
+                if autoAdvance || askUserForContinuation() {
+                    let currentPhase = round.cycle.phase
 
-        let isCounterPassedHorizon: Bool = {
-            let horizonDuration = horizon * 60.0
+                    try round.moveForward()
 
-            return elapsedDuration >= horizonDuration
-        }()
-
-        if !isCounterPassedHorizon {
-            // time has not passed yet
-            return
-        }
-
-        // end of the current phase
-        announceEndOfPhase()
-
-        if autoAdvance || askUserForContinuation() {
-            try moveForward()
-        } else {
-            throw CancellationError()
+                    announceNewPhase(basedOn: currentPhase)
+                } else {
+                    throw CancellationError()
+                }
         }
     }
 
@@ -134,12 +118,13 @@ final class Pomodoro: Codable, Equatable {
     private func announceEndOfPhase() {
         let confirmationMessage: String
 
+        let index = round.cycle.index
         switch round.cycle.phase {
             case .focused:
-                confirmationMessage = "Lets take a break! 🎉"
+                confirmationMessage = "Completed [\(index)] focus duration 🥳"
 
             case .resting:
-                confirmationMessage = "Work does not stop, grind does not stop! 💻"
+                confirmationMessage = "Completed [\(index)] resting duration 🤩"
         }
 
         notify(confirmationMessage)
@@ -148,12 +133,24 @@ final class Pomodoro: Codable, Equatable {
         display(confirmationMessage)
     }
 
+    // make it throwable?
     @MainActor
     private func askUserForContinuation() -> ShouldContinue {
         let continuationCharactersDescription = continuationCharacters
             .map { "'\($0)'" }
             .joined(separator: "|")
 
+        let message: String
+
+        switch round.cycle.phase {
+            case .focused where round.cycle.duration != 0.0:
+                message = "Lets take a break, Shall we?"
+
+            default:
+                message = "Work does not stop, grind does not stop! 💻\nStart another focus round?"
+        }
+
+        display(message)
         display("Press \(continuationCharactersDescription) to continue.")
 
         // ask for continuation
@@ -173,29 +170,23 @@ final class Pomodoro: Codable, Equatable {
         return shouldContinue
     }
 
+    // new phase?!
     @MainActor
-    private func moveForward() throws {
-        let currentPhase = round.cycle
-
-        try round.moveForward()
-
-        announceNewPhase(basedOn: currentPhase)
-
-        elapsedDuration = 0.0
-    }
-
-    @MainActor
-    private func announceNewPhase(basedOn oldCycle: Round.ActiveCycle) {
+    private func announceNewPhase(basedOn oldPhase: Phase) {
         let message: String
 
-        let duration = oldCycle.duration
+        // new cycle
+        let cycle = round.cycle
+        let newIndex = cycle.index
+        let newDuration = cycle.duration
+        let newPhase = cycle.phase
 
-        switch oldCycle.phase {
-            case .focused:
-                message = "[\(round.cycle.index)] Starting rest phase for '\(duration)' minutes."
+        switch (oldPhase, newPhase) {
+            case (.focused, .resting), (.resting, .resting):
+                message = "[\(newIndex)] Starting rest phase for '\(newDuration)'."
 
-            case .resting:
-                message = "[\(round.cycle.index)] Starting a new focus cycle for '\(duration)' minutes."
+            case (.resting, .focused), (.focused, .focused):
+                message = "[\(newIndex)] Starting a new focus cycle for '\(newDuration)'."
         }
 
         display(message)
@@ -206,6 +197,5 @@ final class Pomodoro: Codable, Equatable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(autoAdvance, forKey: .autoAdvance)
         try container.encodeIfPresent(round, forKey: .round)
-        try container.encode(elapsedDuration, forKey: .elapsedDuration)
     }
 }
