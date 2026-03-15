@@ -73,7 +73,7 @@ final class Pomodoro: Codable, Equatable {
         with focusDuration: Duration,
         and restDuration: Duration
     ) {
-        round = Round.make(
+        round = Round.makeDefault(
             fromCycles: cycles,
             focus: focusDuration,
             rest: restDuration

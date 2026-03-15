@@ -33,7 +33,8 @@ struct Round: Equatable, Codable {
         print("[\(index)] Starting a new focus cycle for '\(_cycle.focus)'.")
     }
 
-    static func make(fromCycles count: UInt8, focus: Duration, rest: Duration) -> Round {
+    /// Default means last cycle has more rest phase duration.
+    static func makeDefault(fromCycles count: UInt8, focus: Duration, rest: Duration) -> Round {
         var cycles = Queue()
 
         for _ in 0..<(count - 1) {
@@ -61,6 +62,11 @@ struct Round: Equatable, Codable {
         cycle.advance()
     }
 
+    /// Advances the round to the next phase or cycle.
+    ///
+    /// - If the current phase is a focused phase and a rest phase exists, transitions to the rest phase of the current cycle.
+    /// - Otherwise, moves to the next cycle and starts its focus phase.
+    /// - Throws: `ReachedEndOfCyclesFailure` if all cycles in the round have been completed.
     @MainActor
     mutating func moveForward() throws {
         switch cycle.phase {
