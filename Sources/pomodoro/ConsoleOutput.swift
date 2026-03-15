@@ -9,7 +9,7 @@ enum ConsoleOutput {
     private static var lastLoadingOutputLength: Int = 0
 
     /// Prints a progress/loading bar to the console, reflecting elapsed time versus a set duration.
-    static func printLoading(for elapsedDuration: Duration, horizon: Duration) {
+    static func printLoading(for elapsedDuration: Duration, against horizon: Duration) {
         // Spinner animation frames
         let spinnerFrames = ["|", "/", "-", "\\"]
         let spinner = spinnerFrames[Int(elapsedDuration) % spinnerFrames.count]
