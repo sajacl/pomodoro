@@ -57,10 +57,8 @@ struct Round: Equatable, Codable {
     }
 
     @MainActor
-    mutating func advance() -> Iterator.Result {
-        let result = cycle.advance()
-
-        return result
+    mutating func advance() -> ActiveCycle.Iterator.Result {
+        cycle.advance()
     }
 
     @MainActor
@@ -97,6 +95,7 @@ struct Round: Equatable, Codable {
     }
 }
 
+// MARK: ActiveCycle
 extension Round {
     /// Object describing the current cycle (aka active cycle).
     struct ActiveCycle: Equatable, Codable {

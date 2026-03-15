@@ -104,7 +104,7 @@ struct Main: AsyncParsableCommand {
         while true {
             do {
                 try iterator.advance()
-            } catch is ReachedEndOfCyclesFailure {
+            } catch is Round.ReachedEndOfCyclesFailure {
                 // ask user
                 // iterator.start(cycles: cycleCount, with: focusDuration, and: restDuration)
                 break
