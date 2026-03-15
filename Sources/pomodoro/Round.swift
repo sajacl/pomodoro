@@ -8,34 +8,6 @@ struct Round: Equatable, Codable {
     /// The currently active cycle (focus or rest phase).
     private(set) var cycle: ActiveCycle
 
-    init(cycleCount: UInt8, focusDuration: Duration, restDuration: Duration) {
-        cycles = Queue()
-
-        for _ in 0..<(cycleCount - 1) {
-            let cycle = Cycle(focus: focusDuration, rest: restDuration)
-
-            cycles.enqueue(cycle)
-        }
-
-        // contains longer resting cycle
-        let lastRestCycle: Duration = {
-            #if DEBUG
-                return 0.1
-            #else
-                return 7.5 * Duration(cycleCount)
-            #endif
-        }()
-
-        cycles.enqueue(Cycle(focus: focusDuration, rest: lastRestCycle))
-
-        let _cycle = cycles.dequeue()!
-        let index: UInt = 1
-
-        cycle = ActiveCycle(index: index, cycle: _cycle)
-
-        print("[\(index)] Starting a new focus cycle for '\(_cycle.focus)' minutes.")
-    }
-
     init?(cycles: Queue) {
         self.cycles = cycles
 
@@ -47,19 +19,62 @@ struct Round: Equatable, Codable {
 
         cycle = ActiveCycle(index: index, cycle: _cycle)
 
-        print("[\(index)] Starting a new focus cycle for '\(_cycle.focus)' minutes.")
+        print("[\(index)] Starting a new focus cycle for '\(_cycle.focus)'.")
     }
 
+    private init(nonEmptyQueue queue: Queue) {
+        cycles = queue
+
+        let _cycle = cycles.dequeue()!
+        let index: UInt = 1
+
+        cycle = ActiveCycle(index: index, cycle: _cycle)
+
+        print("[\(index)] Starting a new focus cycle for '\(_cycle.focus)'.")
+    }
+
+    static func make(fromCycles count: UInt8, focus: Duration, rest: Duration) -> Round {
+        var cycles = Queue()
+
+        for _ in 0..<(count - 1) {
+            let cycle = Cycle(focus: focus, rest: rest)
+
+            cycles.enqueue(cycle)
+        }
+
+        // contains longer resting cycle
+        let lastRestCycle: Duration = {
+            #if DEBUG
+                return 0.1
+            #else
+                return 7.5 * Duration(count)
+            #endif
+        }()
+
+        cycles.enqueue(Cycle(focus: focus, rest: lastRestCycle))
+
+        return Round(nonEmptyQueue: cycles)
+    }
+
+    @MainActor
+    mutating func advance() -> Iterator.Result {
+        let result = cycle.advance()
+
+        return result
+    }
+
+    @MainActor
     mutating func moveForward() throws {
         switch cycle.phase {
             case .focused where cycle.cycle.rest != 0.0:
-                cycle.phase = .resting
+                cycle.transitionToRestPhase()
 
             default:
                 try moveToNextCycle()
         }
     }
 
+    @MainActor
     private mutating func moveToNextCycle() throws {
         // replace phase with a new one
         // aka start fresh
@@ -94,10 +109,14 @@ extension Round {
         /// The phase (focused or resting) currently active.
         fileprivate(set) var phase: Phase
 
+        private var iterator: Iterator
+
         fileprivate init(index: UInt, cycle: Cycle, phase: Phase = .focused) {
             self.index = index
             self.cycle = cycle
             self.phase = phase
+
+            iterator = Iterator(horizon: cycle.focus)
         }
 
         /// The duration (in minutes) of the current phase.
@@ -109,6 +128,18 @@ extension Round {
                 case .resting:
                     return cycle.rest
             }
+        }
+
+        @MainActor
+        fileprivate mutating func advance() -> Iterator.Result {
+            iterator.next()
+        }
+
+        @MainActor
+        fileprivate mutating func transitionToRestPhase() {
+            phase = .resting
+
+            iterator = Iterator(horizon: cycle.rest)
         }
     }
 }
