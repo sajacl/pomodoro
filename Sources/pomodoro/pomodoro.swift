@@ -8,7 +8,7 @@ typealias ShouldContinue = Bool
 
 @main
 @available(macOS 12, iOS 15, visionOS 1, tvOS 15, watchOS 8, *)
-struct Pomodoro: AsyncParsableCommand {
+struct Main: AsyncParsableCommand {
     /// Duration of the pomodoro timer, in minutes.
     /// Which will be recieved from standard output.
     @Argument(help: "Duration of the pomodoro counter, in minutes.")
