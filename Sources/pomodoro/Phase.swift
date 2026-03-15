@@ -1,38 +1,13 @@
 import Foundation
 
-///// Object which is responsible for Phase management/transition in a pomorodo lifecycle.
-struct Phase: Codable, Equatable {
-    /// A cycle in the phase.
-    let cycle: Cycle
+/// Represents a single phase (either focusing or resting) in the Pomodoro.
+///
+/// Each phase holds a duration (in minutes), defining how long the focus or rest period lasts.
+/// Used to track the user's current activity for productivity timing.
+enum Phase: Codable, Equatable {
+    /// The focus (work) phase.
+    case focused
 
-    /// Current state of a phase which will be either `focusing` or `resting`.
-    /*private(set)*/ var state: State
-
-    /// State of a phase.
-    enum State: Codable, Equatable {
-        /// Focusing cycle in a phase.
-        case focusing
-
-        /// Resting cycle in a phase.
-        case resting
-    }
-
-    init(cycle: Cycle) {
-        self.cycle = cycle
-        self.state = .focusing
-    }
-
-    mutating func startResting() {
-        state = .resting
-    }
-
-    var duration: Duration {
-        switch state {
-            case .focusing:
-                return cycle.focus
-
-            case .resting:
-                return cycle.rest ?? 5.0
-        }
-    }
+    /// The rest (break) phase
+    case resting
 }

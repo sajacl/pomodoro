@@ -1,21 +1,14 @@
 import Foundation
 import ArgumentParser
 
-/// Gap interval in seconds.
-private let interval: Duration = 1.0
+/// RunLoop interval in seconds.
+private let interval: TimeInterval = 1.0
 
-/// Allowed character that will move state forward.
-private let continuationCharacters: Set<Character> = ["Y"]
-
-typealias CanContinue = Bool
-
-typealias Duration = TimeInterval
-//private typealias RemainingDuration = TimeInterval
+typealias ShouldContinue = Bool
 
 @main
 @available(macOS 12, iOS 15, visionOS 1, tvOS 15, watchOS 8, *)
-@MainActor
-struct pomodoro: AsyncParsableCommand {
+struct Main: AsyncParsableCommand {
     /// Duration of the pomodoro timer, in minutes.
     /// Which will be recieved from standard output.
     @Argument(help: "Duration of the pomodoro counter, in minutes.")
@@ -34,11 +27,11 @@ struct pomodoro: AsyncParsableCommand {
         help: "Duration of the resting counter, in minutes."
     )
     var restDuration: Duration = {
-#if DEBUG
-        return 0.1
-#else
-        return 5.0
-#endif
+        #if DEBUG
+            return 0.1
+        #else
+            return 5.0
+        #endif
     }()
 
     /// Duration of the rest timer, in minutes.
@@ -55,15 +48,15 @@ struct pomodoro: AsyncParsableCommand {
         name: [.customLong("auto_advance"), .customShort("a")],
         help: "Flag indicating if the counter should automatically advance to the next phase after completion."
     )
-    var autoAdvance: Bool = false
+    var autoAdvance: Bool = {
+        #if DEBUG
+            return true
+        #else
+            return false
+        #endif
+    }()
 
-    private var state: State = .notStarted {
-        didSet {
-            #if DEBUG
-                print(state)
-            #endif
-        }
-    }
+    private var state: State = .notStarted
 
     /// Application state machine.
     private enum State: Codable/*, Comparable*/ {
@@ -71,7 +64,7 @@ struct pomodoro: AsyncParsableCommand {
         case notStarted
 
         /// Application is ready to start with given durations.
-        case readyToStart(cycles: [Cycle])
+        case readyToStart
 
         /// Application
         case running/*(Phase)*/
@@ -80,27 +73,42 @@ struct pomodoro: AsyncParsableCommand {
         case paused
     }
 
-    private var phaseManager: PhaseManager!
+    private var iterator: Pomodoro!
 
     // MARK: Main
+    @MainActor
     mutating func run() async throws {
-        let cycles: [Cycle] = .makeDefault(
-            focusDuration: focusDuration,
-            restDuration: restDuration,
-            cycleCount: cycleCount
-        )
+        // - bootstrap
 
-        // initial state
-        state = .readyToStart(cycles: cycles)
+        // guard against zero cycle count.
+        guard cycleCount > 0 else {
+            print("Cycle count must be greater than zero.")
+            return
+        }
 
-        phaseManager = PhaseManager(autoAdvance: autoAdvance, cycles: cycles)
+        // guard against minus durations.
+        guard focusDuration > 0.0, restDuration >= 0.0 else {
+            print("Cycle count must be greater than zero.")
+            return
+        }
 
-        phaseManager.start()
+        state = .readyToStart
+
+        // - initialization
+        iterator = Pomodoro.makeDefault(autoAdvance: autoAdvance)
+
+        iterator.start(cycles: cycleCount, with: focusDuration, and: restDuration)
         state = .running
 
-        // run loop
+        // - run loop
         while true {
-            if !phaseManager.advance() {
+            do {
+                try iterator.advance()
+            } catch is Round.ReachedEndOfCyclesFailure {
+                // ask user
+                // iterator.start(cycles: cycleCount, with: focusDuration, and: restDuration)
+                break
+            } catch {
                 break
             }
 
