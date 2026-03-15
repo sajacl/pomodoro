@@ -116,13 +116,23 @@ extension Round {
 
         private var iterator: Iterator
 
-        fileprivate init(index: UInt, cycle: Cycle, phase: Phase = .focused) {
+        fileprivate init(index: UInt, cycle: Cycle) {
+            self.index = index
+            self.cycle = cycle
+
+            phase = .focused
+            iterator = Iterator(horizon: cycle.focus)
+        }
+
+        #if DEBUG
+        init(index: UInt, cycle: Cycle, phase: Phase) {
             self.index = index
             self.cycle = cycle
             self.phase = phase
 
             iterator = Iterator(horizon: cycle.focus)
         }
+        #endif
 
         /// The duration (in minutes) of the current phase.
         var duration: Duration {
