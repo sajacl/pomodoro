@@ -14,7 +14,8 @@ infix operator +=
 struct Duration: Equatable, Codable,
                  ExpressibleByFloatLiteral,
                  ExpressibleByArgument,
-                 Comparable {
+                 Comparable,
+                 CustomStringConvertible {
     /// Underlying value of the duration, in minutes.
     fileprivate var underlyingCounter: Double
 
@@ -85,6 +86,22 @@ struct Duration: Equatable, Codable,
     /// Returns `true` if the left `Duration` (in minutes) is less than the right.
     static func < (lhs: Duration, rhs: Duration) -> Bool {
         lhs.underlyingCounter < rhs.underlyingCounter
+    }
+
+    var description: String {
+        // relative to minute
+        let durationInSeconds = underlyingCounter * 60
+        let hours = durationInSeconds / 3600
+        let minutes = (durationInSeconds.truncatingRemainder(dividingBy: 3600)) / 60
+        let seconds = durationInSeconds.truncatingRemainder(dividingBy: 60)
+
+        if hours >= 1 {
+            return "\(hours) hours, \(minutes) minutes, \(seconds) seconds"
+        } else if minutes >= 1 {
+            return "\(minutes) minutes, \(seconds) seconds"
+        }
+
+        return "\(seconds) seconds"
     }
 }
 
