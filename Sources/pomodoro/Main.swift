@@ -73,7 +73,7 @@ struct Main: AsyncParsableCommand {
         case paused
     }
 
-    private var iterator: Pomodoro.Iterator!
+    private var iterator: Pomodoro!
 
     // MARK: Main
     @MainActor
@@ -95,7 +95,7 @@ struct Main: AsyncParsableCommand {
         state = .readyToStart
 
         // initialization
-        iterator = Iterator.makeDefault(autoAdvance: autoAdvance)
+        iterator = Pomodoro.makeDefault(autoAdvance: autoAdvance)
 
         iterator.start(cycles: cycleCount, with: focusDuration, and: restDuration)
         state = .running
