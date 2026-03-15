@@ -6,7 +6,7 @@ private let continuationCharacters: Set<Character> = ["Y"]
 /// Orchestrates advancing through cycles and phases.
 ///
 /// Handles duration tracking, prompting, and notification for each Pomodoro phase (focus/rest).
-final class Pomodoro: Codable, Equatable {
+final class Pomodoro: Equatable, Codable {
     /// Indicates whether the timer should automatically advance to the next phase without user input.
     private let autoAdvance: Bool
 

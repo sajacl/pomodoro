@@ -1,7 +1,7 @@
 import Foundation
 
 /// Describes a single Pomodoro cycle.
-struct Cycle: Codable, Equatable {
+struct Cycle: Equatable, Codable {
     /// Duration (in minutes) for focusing.
     var focus: Duration
 
