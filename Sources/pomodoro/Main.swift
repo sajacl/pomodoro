@@ -78,7 +78,7 @@ struct Main: AsyncParsableCommand {
     // MARK: Main
     @MainActor
     mutating func run() async throws {
-        // bootstrap
+        // - bootstrap
 
         // guard against zero cycle count.
         guard cycleCount > 0 else {
@@ -94,13 +94,13 @@ struct Main: AsyncParsableCommand {
 
         state = .readyToStart
 
-        // initialization
+        // - initialization
         iterator = Pomodoro.makeDefault(autoAdvance: autoAdvance)
 
         iterator.start(cycles: cycleCount, with: focusDuration, and: restDuration)
         state = .running
 
-        // run loop
+        // - run loop
         while true {
             do {
                 try iterator.advance()
