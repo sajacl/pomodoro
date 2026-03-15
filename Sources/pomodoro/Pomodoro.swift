@@ -3,6 +3,8 @@ import Foundation
 /// Allowed character that will move state forward.
 private let continuationCharacters: Set<Character> = ["Y"]
 
+typealias ShouldContinue = Bool
+
 /// Orchestrates advancing through cycles and phases.
 ///
 /// Handles duration tracking, prompting, and notification for each Pomodoro phase (focus/rest).
