@@ -9,4 +9,24 @@ struct RoundTests {
 
         #expect(round == nil)
     }
+
+    @Test
+    func creation_not_nil() {
+        let cyclesCount = 1
+
+        let focus: Duration = 1.0
+        let rest: Duration = 1.0
+
+        var cycles = Queue()
+
+        for _ in 0..<(cyclesCount) {
+            let cycle = Cycle(focus: focus, rest: rest)
+
+            cycles.enqueue(cycle)
+        }
+
+        let round = Round(cycles: cycles)
+
+        #expect(round != nil)
+    }
 }
