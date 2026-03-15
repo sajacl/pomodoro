@@ -16,6 +16,10 @@ struct Queue: Equatable, Codable, Sequence, CustomDebugStringConvertible {
         // no-op
     }
 
+    var isEmpty: Bool {
+        head == nil
+    }
+
     /// The last node in the queue.
     private var tail: Node? {
         var node: Node? = head
