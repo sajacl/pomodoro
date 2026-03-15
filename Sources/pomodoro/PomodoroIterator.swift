@@ -4,21 +4,29 @@ import Foundation
 private let continuationCharacters: Set<Character> = ["Y"]
 
 extension Pomodoro {
-    /// <#Description#>
+    /// Orchestrates advancing through cycles and phases.
+    ///
+    /// Handles duration tracking, prompting, and notification for each Pomodoro phase (focus/rest).
     final class Iterator: Codable, Equatable {
-        /// Boolean flag that indicates wheter the app should advance without asking.
+        /// Indicates whether the timer should automatically advance to the next phase without user input.
         private let autoAdvance: Bool
 
+        /// Closure used to display messages to the user (e.g., phase changes, prompts).
         private let display: @MainActor (String) -> Void
 
+        /// Closure used to present loading/progress information (elapsed vs. total duration) to the user.
         private let displayLoading: @MainActor (_ for: Duration, _ horizon: Duration) -> Void
 
+        /// Closure used to send notifications or alerts to the user at the end of a phase.
         private let notify: @MainActor (String) -> Void
 
-        /// List of cycles.
+        /// The current round of Pomodoro cycles being run.
         private var round: Round!
 
-        /// Elapsed time which will be check against durations.
+        /// Amount of time elapsed within the current phase, measured in minutes.
+        ///
+        /// This is compared against the current phase's duration (`Round.cycle.duration`)
+        /// to determine when to trigger a phase transition.
         private var elapsedDuration: Duration = 0.0
 
         init(
@@ -42,7 +50,7 @@ extension Pomodoro {
             )
         }
 
-        enum CodingKeys: String, CodingKey {
+        private enum CodingKeys: String, CodingKey {
             case autoAdvance
 
             case round
@@ -92,7 +100,7 @@ extension Pomodoro {
         @MainActor
         func advance() throws {
             // moving forward
-            elapsedDuration += 1
+            elapsedDuration += 1.0
 
             let horizon: Duration = round.cycle.duration
 
@@ -101,7 +109,7 @@ extension Pomodoro {
             // counter book keeping
 
             let isCounterPassedHorizon: Bool = {
-                let horizonDuration = horizon * 60
+                let horizonDuration = horizon * 60.0
 
                 return elapsedDuration >= horizonDuration
             }()
