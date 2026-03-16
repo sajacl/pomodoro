@@ -40,6 +40,24 @@ struct Test {
 
         #expect(queue.dequeue() == mockQueue)
     }
+
+    @Test
+    func copy_assignment() async throws {
+        var queue1 = Queue()
+
+        #expect(queue1.isEmpty)
+
+        let mockQueue = Cycle.mock
+
+        queue1.enqueue(mockQueue)
+
+        let queue2 = queue1
+
+        #expect(queue1.dequeue() == mockQueue)
+        #expect(queue1.isEmpty)
+
+        #expect(!queue2.isEmpty)
+    }
 }
 
 private extension Cycle {
