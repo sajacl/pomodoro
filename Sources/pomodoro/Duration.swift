@@ -1,12 +1,6 @@
 import Foundation
 import ArgumentParser
 
-/// Multiplies two `Duration` values.
-infix operator *
-
-/// Adds the right-hand `Duration` to the left-hand `Duration`.
-infix operator +=
-
 /// Represents a non-negative duration, measured in **minutes**, for any phase (focus, rest) in a Pomodoro ``Cycle``.
 ///
 /// `Duration` is used throughout the Pomodoro timer logic to convey the length of each phase, elapsed time, and argument parsing from the command line.
@@ -19,9 +13,8 @@ struct Duration: Equatable, Codable,
     /// Underlying value of the duration, in minutes.
     fileprivate var underlyingCounter: Double
 
-    /// Creates a new `Duration` from a `Double` value (in minutes). Negative values are clamped to zero.
-    ///
-    /// - Parameter duration: The duration in minutes.
+    /// Creates a new `Duration` from a `Double` value (in minutes).
+    /// Negative values are clamped to zero.
     init(_ duration: Double) {
         if duration < 0 {
             underlyingCounter = 0
@@ -30,9 +23,8 @@ struct Duration: Equatable, Codable,
         }
     }
 
-    /// Creates a new `Duration` from an `Int` value (in minutes). Negative values are clamped to zero.
-    ///
-    /// - Parameter duration: The duration in minutes.
+    /// Creates a new `Duration` from an `Int` value (in minutes).
+    /// Negative values are clamped to zero.
     init(_ duration: Int) {
         if duration < 0 {
             underlyingCounter = 0
