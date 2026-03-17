@@ -74,4 +74,29 @@ struct RoundTests {
         #expect(round.cycle.phase == .resting)
         #expect(round.cycle.duration == 2.0)
     }
+
+    @Test
+    @MainActor
+    func moveForward_restToNextCycle_transition() throws {
+        // Two cycles
+        let first = Cycle(focus: 1.0, rest: 2.0)
+        let second = Cycle(focus: 3.0, rest: 4.0)
+
+        var queue = Queue()
+        queue.enqueue(first)
+        queue.enqueue(second)
+
+        var round = try #require(Round(cycles: queue))
+        // Move to rest of first cycle
+        try round.moveForward()
+
+        #expect(round.cycle.phase == .resting)
+
+        // Move to next cycle
+        try round.moveForward()
+
+        #expect(round.cycle.index == 2)
+        #expect(round.cycle.phase == .focused)
+        #expect(round.cycle.duration == 3.0)
+    }
 }
