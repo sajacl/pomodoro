@@ -118,4 +118,34 @@ struct RoundTests {
             // Expected
         }
     }
+
+    @Test
+    @MainActor
+    func advance_inProgressAndEndOfPhase() {
+        let cycle = Cycle(focus: 0.01, rest: 0.0)
+        var queue = Queue()
+        queue.enqueue(cycle)
+        var round = try! #require(Round(cycles: queue))
+
+        let result1 = round.advance()
+
+        switch result1 {
+            case .inProgress(let elapsed, let horizon):
+                #expect(elapsed == 0.0)
+                #expect(horizon == 0.01)
+            case .endOfPhase:
+                Issue.record("Should not end on first advance")
+        }
+
+        let result2 = round.advance()
+
+        switch result2 {
+            case .inProgress:
+                Issue.record("Should end phase on second advance")
+
+            case .endOfPhase:
+                // expected
+                #expect(true)
+        }
+    }
 }
