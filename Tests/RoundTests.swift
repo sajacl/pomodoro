@@ -148,4 +148,45 @@ struct RoundTests {
                 #expect(true)
         }
     }
+
+    @Test
+    @MainActor
+    func makeDefault_createsExpectedCycles() throws {
+        let count: UInt8 = 4
+
+        let focus: Duration = 1.0
+
+        let rest: Duration = 2.0
+
+        var round = Round.makeDefault(fromCycles: count, focus: focus, rest: rest)
+
+        for i in 1...count {
+            #expect(round.cycle.index == i)
+
+            if i < count {
+                #expect(round.cycle.duration == focus)
+
+                try round.moveForward()
+
+                #expect(round.cycle.duration == rest)
+
+                try round.moveForward()
+            } else {
+                // last cycle, rest duration should be different (0.1 if DEBUG, otherwise 7.5*count)
+                let expectedRest: Duration
+
+                #if DEBUG
+                    expectedRest = 0.1
+                #else
+                    expectedRest = 7.5 * Duration(count)
+                #endif
+
+                #expect(round.cycle.duration == focus)
+
+                try round.moveForward()
+
+                #expect(round.cycle.duration == expectedRest)
+            }
+        }
+    }
 }
