@@ -99,4 +99,23 @@ struct RoundTests {
         #expect(round.cycle.phase == .focused)
         #expect(round.cycle.duration == 3.0)
     }
+
+    @Test
+    @MainActor
+    func moveForward_throwsOnEndOfCycles() throws {
+        let cycle = Cycle(focus: 1.0, rest: 0.0)
+
+        var queue = Queue()
+        queue.enqueue(cycle)
+
+        var round = try #require(Round(cycles: queue))
+        // Only one cycle, no rest phase. Should throw after first move.
+        do {
+            try round.moveForward()
+
+            Issue.record("Should throw at end of cycles")
+        } catch is Round.ReachedEndOfCyclesFailure {
+            // Expected
+        }
+    }
 }
