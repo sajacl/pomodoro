@@ -58,4 +58,20 @@ struct RoundTests {
 
         #expect(round.cycle == mockActiveCycle)
     }
+
+    @Test
+    @MainActor
+    func moveForward_focusToRest_transition() throws {
+        let cycle = Cycle(focus: 1.0, rest: 2.0)
+        var queue = Queue()
+        queue.enqueue(cycle)
+
+        var round = try #require(Round(cycles: queue))
+        #expect(round.cycle.phase == .focused)
+
+        try round.moveForward()
+
+        #expect(round.cycle.phase == .resting)
+        #expect(round.cycle.duration == 2.0)
+    }
 }
